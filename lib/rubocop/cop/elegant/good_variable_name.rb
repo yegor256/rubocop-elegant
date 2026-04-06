@@ -8,6 +8,7 @@ module RuboCop
     module Elegant
       class GoodVariableName < Base
         MSG = 'Variable name "%<name>s" does not match the required pattern'
+        public_constant :MSG
 
         def on_lvasgn(node)
           check(node, node.children.first.to_s)

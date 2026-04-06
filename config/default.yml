@@ -93,3 +93,17 @@ Metrics/CyclomaticComplexity:
   Max: 15
 Metrics/PerceivedComplexity:
   Max: 15
+Style/Copyright:
+  Enabled: false
+Lint/ConstantResolution:
+  Enabled: false
+Style/DocumentationMethod:
+  Enabled: false
+Bundler/GemComment:
+  Enabled: false
+Minitest/NoTestCases:
+  Enabled: false
+Style/ArrayFirstLast:
+  Enabled: false
+Style/StringHashKeys:
+  Enabled: false

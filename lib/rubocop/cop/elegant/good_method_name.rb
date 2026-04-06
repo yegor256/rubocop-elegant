@@ -8,6 +8,7 @@ module RuboCop
     module Elegant
       class GoodMethodName < Base
         MSG = 'Method name "%<name>s" does not match the required pattern'
+        public_constant :MSG
 
         def on_def(node)
           check(node, node.method_name.to_s)

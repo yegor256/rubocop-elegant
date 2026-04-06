@@ -41,7 +41,7 @@ class GoodVariableNameTest < Minitest::Test
   def offenses(source)
     path = File.expand_path('../../config/default.yml', __dir__)
     yaml = YAML.safe_load(File.read(path))
-    config = RuboCop::Config.new('Elegant/GoodVariableName' => yaml['Elegant/GoodVariableName'])
+    config = RuboCop::Config.new({ 'Elegant/GoodVariableName' => yaml['Elegant/GoodVariableName'] })
     cop = RuboCop::Cop::Elegant::GoodVariableName.new(config)
     commissioner = RuboCop::Cop::Commissioner.new([cop], [], raise_error: true)
     processed = RuboCop::ProcessedSource.new(source, Float(RUBY_VERSION[/[0-9]+.[0-9]+/]))

@@ -10,6 +10,7 @@ module RuboCop
         extend AutoCorrector
 
         MSG = 'Comment is not allowed, unless it is SPDX, magic, or rubocop directive'
+        public_constant :MSG
 
         def on_new_investigation
           processed_source.comments.each do |comment|

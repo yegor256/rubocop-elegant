@@ -37,7 +37,7 @@ class GoodMethodNameTest < Minitest::Test
   def offenses(source)
     path = File.expand_path('../../config/default.yml', __dir__)
     yaml = YAML.safe_load(File.read(path))
-    config = RuboCop::Config.new('Elegant/GoodMethodName' => yaml['Elegant/GoodMethodName'])
+    config = RuboCop::Config.new({ 'Elegant/GoodMethodName' => yaml['Elegant/GoodMethodName'] })
     cop = RuboCop::Cop::Elegant::GoodMethodName.new(config)
     commissioner = RuboCop::Cop::Commissioner.new([cop], [], raise_error: true)
     processed = RuboCop::ProcessedSource.new(source, Float(RUBY_VERSION[/[0-9]+.[0-9]+/]))

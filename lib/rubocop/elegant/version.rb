@@ -6,5 +6,6 @@
 module RuboCop
   module Elegant
     VERSION = '0.0.1'
+    public_constant :VERSION
   end
 end

@@ -6,7 +6,7 @@
 require 'English'
 
 Gem::Specification.new do |s|
-  s.required_rubygems_version = Gem::Requirement.new('>= 0') if s.respond_to? :required_rubygems_version=
+  s.required_rubygems_version = Gem::Requirement.new('>= 0') if s.respond_to?(:required_rubygems_version=)
   s.required_ruby_version = '>=2.2'
   s.name = 'rubocop-elegant'
   s.version = '0.0.0'
@@ -22,6 +22,6 @@ Gem::Specification.new do |s|
   s.extra_rdoc_files = ['README.md']
   s.metadata['rubygems_mfa_required'] = 'true'
   s.metadata['default_lint_roller_plugin'] = 'RuboCop::Elegant::Plugin'
-  s.add_dependency 'lint_roller', '~> 1.1'
-  s.add_dependency 'rubocop', '~> 1.75'
+  s.add_dependency('lint_roller', '~> 1.1')
+  s.add_dependency('rubocop', '~> 1.75')
 end

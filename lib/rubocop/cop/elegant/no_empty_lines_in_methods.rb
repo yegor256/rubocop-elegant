@@ -10,6 +10,7 @@ module RuboCop
         extend AutoCorrector
 
         MSG = 'Empty line inside method body is not allowed'
+        public_constant :MSG
 
         def on_def(node)
           check(node)
@@ -31,7 +32,7 @@ module RuboCop
         def range(node)
           first = node.body.first_line
           last = node.body.last_line
-          return nil if first == last
+          return if first == last
           (first..last)
         end
 
