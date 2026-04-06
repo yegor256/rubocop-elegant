@@ -9,7 +9,7 @@ module RuboCop
       class NoComments < Base
         extend AutoCorrector
 
-        MSG = 'Comment is not allowed, unless it is SPDX, magic, or rubocop directive'
+        MSG = 'Comment is not allowed, unless it is SPDX, magic, rubocop directive, or docblock'
         public_constant :MSG
 
         def on_new_investigation
