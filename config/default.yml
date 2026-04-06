@@ -8,3 +8,7 @@ Elegant/NoComments:
   Description: 'Disallows comments in source code, except SPDX license comments'
   Enabled: true
   VersionAdded: '0.0.1'
+Elegant/NoEmptyLinesInMethods:
+  Description: 'Disallows empty lines inside method bodies'
+  Enabled: true
+  VersionAdded: '0.0.1'

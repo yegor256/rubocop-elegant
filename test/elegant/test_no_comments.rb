@@ -111,11 +111,12 @@ class NoCommentsTest < Minitest::Test
 
   def autocorrect(source)
     config = RuboCop::Config.new
+    cop = RuboCop::Cop::Elegant::NoComments.new(config, autocorrect: true)
     processed = RuboCop::ProcessedSource.new(source, RUBY_VERSION.to_f)
-    team = RuboCop::Cop::Team.mobilize([RuboCop::Cop::Elegant::NoComments], config, autocorrect: true)
-    report = team.investigate(processed)
+    commissioner = RuboCop::Cop::Commissioner.new([cop], [], raise_error: true)
+    result = commissioner.investigate(processed)
     corrector = RuboCop::Cop::Corrector.new(processed.buffer)
-    report.correctors.compact.each { |c| corrector.merge!(c) }
+    result.correctors.compact.each { |c| corrector.merge!(c) }
     corrector.rewrite
   end
 
