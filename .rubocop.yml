@@ -28,3 +28,7 @@ Metrics/PerceivedComplexity:
   Max: 12
 Layout/EndOfLine:
   EnforcedStyle: lf
+Naming/FileName:
+  Exclude:
+    - 'lib/rubocop-elegant.rb'
+    - 'test/test_rubocop-elegant.rb'

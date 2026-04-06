@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: Copyright (c) 2019-2026 Yegor Bugayenko
+# SPDX-License-Identifier: MIT
+---
+Elegant:
+  Enabled: true
+  DocumentationBaseURL: https://github.com/yegor256/rubocop-elegant
+Elegant/NoComments:
+  Description: 'Disallows comments in source code, except SPDX license comments'
+  Enabled: true
+  VersionAdded: '0.0.1'
