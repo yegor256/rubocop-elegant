@@ -21,4 +21,7 @@ Gem::Specification.new do |s|
   s.rdoc_options = ['--charset=UTF-8']
   s.extra_rdoc_files = ['README.md']
   s.metadata['rubygems_mfa_required'] = 'true'
+  s.metadata['default_lint_roller_plugin'] = 'RuboCop::Elegant::Plugin'
+  s.add_dependency 'lint_roller', '~> 1.1'
+  s.add_dependency 'rubocop', '~> 1.75'
 end
