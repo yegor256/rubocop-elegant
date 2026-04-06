@@ -15,11 +15,11 @@ Elegant/NoEmptyLinesInMethods:
 
 Naming/VariableName:
   ForbiddenPatterns:
-    - '_'
+    - '[^a-z]'
     - '^.{17,}$'
 Naming/MethodName:
   ForbiddenPatterns:
-    - '_'
+    - '[^a-z!?]'
     - '^.{17,}$'
 Style/IfUnlessModifier:
   Enabled: false
