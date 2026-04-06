@@ -17,3 +17,55 @@ Naming/VariableName:
   ForbiddenPatterns:
     - '_'
     - '^.{17,}$'
+Style/IfUnlessModifier:
+  Enabled: false
+Naming/FileName:
+  Regex: '^[a-z0-9\-._]*$'
+Minitest/EmptyLineBeforeAssertionMethods:
+  Enabled: false
+Layout/EmptyLineAfterGuardClause:
+  Enabled: false
+Layout/RescueEnsureAlignment:
+  Enabled: false
+Layout/MultilineMethodCallIndentation:
+  Enabled: false
+Layout/EndOfLine:
+  EnforcedStyle: lf
+Layout/ParameterAlignment:
+  Enabled: false
+Layout/LineLength:
+  Max: 120
+Style/MultilineBlockChain:
+  Enabled: false
+Style/ClassAndModuleChildren:
+  Enabled: false
+Lint/NestedMethodDefinition:
+  Enabled: false
+Metrics/ParameterLists:
+  Enabled: false
+Layout/MultilineAssignmentLayout:
+  Enabled: true
+Style/Documentation:
+  Enabled: false
+Style/ClassVars:
+  Enabled: false
+Style/RequireOrder:
+  Enabled: true
+Style/AutoResourceCleanup:
+  Enabled: true
+Style/Send:
+  Enabled: true
+Style/StaticClass:
+  Enabled: true
+Style/TopLevelMethodDefinition:
+  Enabled: true
+Style/ImplicitRuntimeError:
+  Enabled: true
+Style/DateTime:
+  Enabled: true
+Lint/NumberConversion:
+  Enabled: true
+Performance/ChainArrayAllocation:
+  Enabled: true
+Performance/OpenStruct:
+  Enabled: true
