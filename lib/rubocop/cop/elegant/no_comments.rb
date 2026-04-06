@@ -37,30 +37,30 @@ module RuboCop
 
         def register(comment)
           add_offense(comment) do |corrector|
-            corrector.remove(removal_range(comment))
+            corrector.remove(removal(comment))
           end
         end
 
-        def removal_range(comment)
-          range = comment.source_range
-          line_start = range.source_line[0, range.column]
-          return range_with_line(range) if line_start.strip.empty?
-          range_with_prefix(range, line_start)
+        def removal(comment)
+          target = comment.source_range
+          prefix = target.source_line[0, target.column]
+          return fullrange(target) if prefix.strip.empty?
+          prefixed(target, prefix)
         end
 
-        def range_with_line(range)
-          start_pos = range.begin_pos - range.column
-          end_pos = range.end_pos
-          end_pos += 1 if newline_after?(end_pos)
-          range.with(begin_pos: start_pos, end_pos: end_pos)
+        def fullrange(target)
+          start = target.begin_pos - target.column
+          ending = target.end_pos
+          ending += 1 if newline?(ending)
+          target.with(begin_pos: start, end_pos: ending)
         end
 
-        def range_with_prefix(range, prefix)
-          whitespace = prefix.match(/\s*$/)[0]
-          range.with(begin_pos: range.begin_pos - whitespace.length, end_pos: range.end_pos)
+        def prefixed(target, prefix)
+          spaces = prefix.match(/\s*$/)[0]
+          target.with(begin_pos: target.begin_pos - spaces.length, end_pos: target.end_pos)
         end
 
-        def newline_after?(pos)
+        def newline?(pos)
           processed_source.buffer.source[pos] == "\n"
         end
       end

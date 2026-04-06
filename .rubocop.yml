@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2019-2026 Yegor Bugayenko
 # SPDX-License-Identifier: MIT
 ---
+inherit_from: config/default.yml
 AllCops:
   DisplayCopNames: true
   TargetRubyVersion: 2.2
@@ -12,27 +13,7 @@ plugins:
   - rubocop-minitest
   - rubocop-performance
   - rubocop-rake
-Minitest/EmptyLineBeforeAssertionMethods:
-  Enabled: false
-Metrics/ClassLength:
-  Enabled: false
-Layout/EmptyLineAfterGuardClause:
-  Enabled: false
-Layout/MultilineMethodCallIndentation:
-  Enabled: false
-Metrics/AbcSize:
-  Max: 30
-Metrics/MethodLength:
-  Max: 30
-Metrics/CyclomaticComplexity:
-  Max: 12
-Metrics/PerceivedComplexity:
-  Max: 12
-Layout/EndOfLine:
-  EnforcedStyle: lf
 Naming/FileName:
   Exclude:
     - 'lib/rubocop-elegant.rb'
     - 'test/test_rubocop-elegant.rb'
-Style/Documentation:
-  Enabled: false

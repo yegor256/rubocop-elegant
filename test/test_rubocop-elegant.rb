@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
+require_relative '../lib/rubocop-elegant'
 # SPDX-FileCopyrightText: Copyright (c) 2019-2026 Yegor Bugayenko
 # SPDX-License-Identifier: MIT
 
 require_relative '../test/test__helper'
-require_relative '../lib/rubocop-elegant'
 
 class RubocopElegantTest < Minitest::Test
   def test_reports_version

@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative 'elegant/good_method_name'
+require_relative 'elegant/good_variable_name'
 # SPDX-FileCopyrightText: Copyright (c) 2019-2026 Yegor Bugayenko
 # SPDX-License-Identifier: MIT
 

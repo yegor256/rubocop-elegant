@@ -4,6 +4,6 @@
 # SPDX-License-Identifier: MIT
 
 require 'rubocop'
-require_relative 'rubocop/elegant/version'
-require_relative 'rubocop/elegant/plugin'
 require_relative 'rubocop/cop/elegant_cops'
+require_relative 'rubocop/elegant/plugin'
+require_relative 'rubocop/elegant/version'
