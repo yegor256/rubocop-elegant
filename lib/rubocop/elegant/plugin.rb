@@ -7,12 +7,6 @@ require 'lint_roller'
 
 module RuboCop
   module Elegant
-    # LintRoller plugin for rubocop-elegant.
-    # Registers the gem with RuboCop and provides default configuration.
-    #
-    # Author:: Yegor Bugayenko (yegor256@gmail.com)
-    # Copyright:: Copyright (c) 2019-2026 Yegor Bugayenko
-    # License:: MIT
     class Plugin < LintRoller::Plugin
       def about
         LintRoller::About.new(

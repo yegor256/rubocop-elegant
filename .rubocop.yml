@@ -6,6 +6,8 @@ AllCops:
   TargetRubyVersion: 2.2
   SuggestExtensions: false
   NewCops: enable
+require:
+  - ./lib/rubocop-elegant
 plugins:
   - rubocop-minitest
   - rubocop-performance
@@ -32,3 +34,5 @@ Naming/FileName:
   Exclude:
     - 'lib/rubocop-elegant.rb'
     - 'test/test_rubocop-elegant.rb'
+Style/Documentation:
+  Enabled: false

@@ -6,10 +6,6 @@
 require_relative '../test/test__helper'
 require_relative '../lib/rubocop-elegant'
 
-# Test for plugin registration.
-# Author:: Yegor Bugayenko (yegor256@gmail.com)
-# Copyright:: Copyright (c) 2019-2026 Yegor Bugayenko
-# License:: MIT
 class RubocopElegantTest < Minitest::Test
   def test_reports_version
     refute_nil(RuboCop::Elegant::VERSION, 'Version is not defined')
