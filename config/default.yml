@@ -11,4 +11,4 @@ Elegant/NoComments:
 Elegant/NoEmptyLinesInMethods:
   Description: 'Disallows empty lines inside method bodies'
   Enabled: true
-  VersionAdded: '0.0.1'
+  VersionAdded: '0.0.2'
