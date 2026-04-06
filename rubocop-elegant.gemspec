@@ -13,7 +13,7 @@ Gem::Specification.new do |s|
   s.license = 'MIT'
   s.summary = 'Set of custom RuboCop cops for elegant Ruby coding'
   s.description =
-    'Explain it here...'
+    'RuboCop plugin enforcing elegant coding style: no comments (except SPDX and magic), no empty lines in methods'
   s.authors = ['Yegor Bugayenko']
   s.email = 'yegor256@gmail.com'
   s.homepage = 'https://github.com/yegor256/rubocop-elegant'
