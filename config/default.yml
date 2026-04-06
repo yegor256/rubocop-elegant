@@ -25,6 +25,8 @@ Naming/MethodName:
   ForbiddenPatterns:
     - '[^a-z!?]'
     - '^.{17,}$'
+  AllowedPatterns:
+    - '^test_'
 Style/IfUnlessModifier:
   Enabled: false
 Naming/FileName:
