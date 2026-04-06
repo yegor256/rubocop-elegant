@@ -18,10 +18,7 @@ Naming/VariableName:
     - '[^a-z]'
     - '^.{17,}$'
   AllowedPatterns:
-    - '^test_'
-    - '^fake_'
-    - '^@[a-z]{1,16}$'
-    - '^\$[a-z]{1,16}$'
+    - '^(@|\$|the_|test_|fake_)[a-z]{1,16}$'
 Metrics/MethodLength:
   Max: 100
 Metrics/ClassLength:
