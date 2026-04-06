@@ -8,6 +8,8 @@ require_relative '../test__helper'
 
 class GoodVariableNameTest < Minitest::Test
   [
+    ['_', 'no name var'],
+    ['_testMe', 'no name var'],
     ['foo', 'short lowercase variable'],
     ['@foo', 'instance variable'],
     ['@@foo', 'class variable'],
