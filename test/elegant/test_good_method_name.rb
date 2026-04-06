@@ -11,6 +11,7 @@ class GoodMethodNameTest < Minitest::Test
     ['def foo; end', 'short lowercase method'],
     ['def save!; end', 'bang method'],
     ['def valid?; end', 'predicate method'],
+    ['def to_s; end', 'to string'],
     ['def test_something_works; end', 'test_ prefix'],
     ['def fake_response; end', 'fake_ prefix'],
     ['def the_answer; end', 'the_ prefix'],

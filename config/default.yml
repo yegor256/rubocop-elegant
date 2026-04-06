@@ -21,7 +21,7 @@ Elegant/GoodMethodName:
   Description: 'Checks that method names match the configured pattern'
   Enabled: true
   VersionAdded: '0.0.3'
-  Pattern: '^((fake_|the_)?[a-z]{1,16}[!?]?|test_[a-z_]+|on_[a-z_]+)$'
+  Pattern: '^(to_s|(fake_|the_)?[a-z]{1,16}[!?]?|test_[a-z_]+|on_[a-z_]+)$'
 
 Naming/VariableName:
   Enabled: false
