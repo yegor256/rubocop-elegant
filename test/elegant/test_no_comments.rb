@@ -5,6 +5,8 @@ require_relative '../../lib/rubocop-elegant'
 # SPDX-License-Identifier: MIT
 
 require_relative '../test__helper'
+require 'fileutils'
+require 'tmpdir'
 
 class NoCommentsTest < Minitest::Test
   def test_registers_offense_for_regular_comment
@@ -98,6 +100,59 @@ class NoCommentsTest < Minitest::Test
     assert_equal('def foo; end', corrected, 'Multiple comments not removed')
   end
 
+  def test_allows_method_docblock_when_gemspec_present
+    Dir.mktmpdir do |dir|
+      FileUtils.touch(File.join(dir, 'foo.gemspec'))
+      source = "# Documents the method.\ndef foo; end"
+      offenses = scan(source, dir)
+      assert_equal(0, offenses.size, 'Method docblock should be allowed when gemspec present')
+    end
+  end
+
+  def test_allows_class_docblock_when_gemspec_present
+    Dir.mktmpdir do |dir|
+      FileUtils.touch(File.join(dir, 'foo.gemspec'))
+      source = "# Documents the class.\nclass Foo; end"
+      offenses = scan(source, dir)
+      assert_equal(0, offenses.size, 'Class docblock should be allowed when gemspec present')
+    end
+  end
+
+  def test_allows_module_docblock_when_gemspec_present
+    Dir.mktmpdir do |dir|
+      FileUtils.touch(File.join(dir, 'foo.gemspec'))
+      source = "# Documents the module.\nmodule Foo; end"
+      offenses = scan(source, dir)
+      assert_equal(0, offenses.size, 'Module docblock should be allowed when gemspec present')
+    end
+  end
+
+  def test_allows_multiline_docblock_when_gemspec_present
+    Dir.mktmpdir do |dir|
+      FileUtils.touch(File.join(dir, 'foo.gemspec'))
+      source = "# First line of docblock.\n# Second line of docblock.\ndef foo; end"
+      offenses = scan(source, dir)
+      assert_equal(0, offenses.size, 'Multiline docblock should be allowed when gemspec present')
+    end
+  end
+
+  def test_disallows_docblock_when_no_gemspec
+    Dir.mktmpdir do |dir|
+      source = "# Documents the method.\ndef foo; end"
+      offenses = scan(source, dir)
+      assert_equal(1, offenses.size, 'Docblock should be disallowed when no gemspec')
+    end
+  end
+
+  def test_disallows_non_docblock_comment_even_with_gemspec
+    Dir.mktmpdir do |dir|
+      FileUtils.touch(File.join(dir, 'foo.gemspec'))
+      source = "# random comment\nx = 1\ndef foo; end"
+      offenses = scan(source, dir)
+      assert_equal(1, offenses.size, 'Non-docblock comment should be disallowed even with gemspec')
+    end
+  end
+
   private
 
   def offenses(source)
@@ -122,5 +177,16 @@ class NoCommentsTest < Minitest::Test
 
   def spdx(suffix)
     "SPDX-#{suffix}"
+  end
+
+  def scan(source, dir)
+    path = File.join(dir, 'test_file.rb')
+    File.write(path, source)
+    config = RuboCop::Config.new
+    cop = RuboCop::Cop::Elegant::NoComments.new(config)
+    commissioner = RuboCop::Cop::Commissioner.new([cop], [], raise_error: true)
+    processed = RuboCop::ProcessedSource.new(source, Float(RUBY_VERSION[/[0-9]+.[0-9]+/]), path)
+    result = commissioner.investigate(processed)
+    result.offenses
   end
 end

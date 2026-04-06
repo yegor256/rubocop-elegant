@@ -21,7 +21,7 @@ module RuboCop
         private
 
         def allowed?(comment)
-          spdx?(comment) || magic?(comment) || rubocop?(comment)
+          spdx?(comment) || magic?(comment) || rubocop?(comment) || (gemspec? && docblock?(comment))
         end
 
         def spdx?(comment)
@@ -34,6 +34,42 @@ module RuboCop
 
         def rubocop?(comment)
           comment.text.match?(/^#\s*rubocop:(disable|enable|todo)\s/)
+        end
+
+        def gemspec?
+          return @gemspec if defined?(@gemspec)
+          path = processed_source.path
+          return @gemspec = false if path.nil?
+          dir = File.dirname(path)
+          @gemspec = Dir.glob(File.join(dir, '*.gemspec')).any?
+        end
+
+        def docblock?(comment)
+          line = comment.location.line
+          successor = codeline(line)
+          return false if successor.nil?
+          definition?(successor)
+        end
+
+        def codeline(start)
+          lines = processed_source.lines
+          (start...lines.size).each do |idx|
+            content = lines[idx]
+            next if content.nil?
+            stripped = content.strip
+            next if stripped.empty? || stripped.start_with?('#')
+            return idx + 1
+          end
+          nil
+        end
+
+        def definition?(line)
+          ast = processed_source.ast
+          return false if ast.nil?
+          ast.each_node(:class, :module, :def, :defs) do |node|
+            return true if node.location.line == line
+          end
+          false
         end
 
         def register(comment)
