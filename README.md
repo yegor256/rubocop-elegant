@@ -41,6 +41,3 @@ bundle exec rake
 ```
 
 If it's clean and you don't see any error messages, submit your pull request.
-
-[rubocop-elegant]: https://www.rubydoc.info/github/yegor256/rubocop-elegant/master/rubocop-elegant
-[fluent interface]: https://en.wikipedia.org/wiki/Fluent_interface
