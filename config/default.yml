@@ -17,8 +17,13 @@ Naming/VariableName:
   ForbiddenPatterns:
     - '[^a-z]'
     - '^.{17,}$'
+  AllowedPatterns:
+    - '^test_'
+    - '^fake_'
 Metrics/MethodLength:
-  Max: 80
+  Max: 100
+Metrics/ClassLength:
+  Max: 300
 Metrics/AbcSize:
   Max: 25
 Naming/MethodName:
@@ -27,6 +32,7 @@ Naming/MethodName:
     - '^.{17,}$'
   AllowedPatterns:
     - '^test_'
+    - '^fake_'
 Style/IfUnlessModifier:
   Enabled: false
 Naming/FileName:
