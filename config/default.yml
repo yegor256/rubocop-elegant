@@ -17,6 +17,10 @@ Naming/VariableName:
   ForbiddenPatterns:
     - '[^a-z]'
     - '^.{17,}$'
+Metrics/MethodLength:
+  Max: 80
+Metrics/AbcSize:
+  Max: 25
 Naming/MethodName:
   ForbiddenPatterns:
     - '[^a-z!?]'
