@@ -7,70 +7,41 @@ require_relative '../../lib/rubocop-elegant'
 require_relative '../test__helper'
 
 class GoodVariableNameTest < Minitest::Test
-  def test_allows_short_lowercase_variable
-    offenses = offenses('foo = 1')
-    assert_equal(0, offenses.size, 'Short lowercase variable should be allowed')
+  [
+    ['foo', 'short lowercase variable'],
+    ['@foo', 'instance variable'],
+    ['@@foo', 'class variable'],
+    ['$foo', 'global variable'],
+    ['test_foo', 'test_ prefix'],
+    ['fake_bar', 'fake_ prefix'],
+    ['the_item', 'the_ prefix'],
+    ['@the_book', 'instance variable with the_ prefix'],
+    ['@@the_book', 'class variable with the_ prefix'],
+    ['@test_book', 'instance variable with test_ prefix'],
+    ['$fake_book', 'global variable with fake_ prefix']
+  ].each do |variable, description|
+    define_method("test_allows_#{description.gsub(/\s+/, '_')}") do
+      assert_equal(0, offenses("#{variable} = 1").size, "#{description} should be allowed")
+    end
   end
 
-  def test_rejects_variable_with_underscore
-    offenses = offenses('foo_bar = 1')
-    assert_equal(1, offenses.size, 'Variable with underscore should be rejected')
-  end
-
-  def test_rejects_variable_with_uppercase
-    offenses = offenses('fooBar = 1')
-    assert_equal(1, offenses.size, 'Variable with uppercase should be rejected')
-  end
-
-  def test_rejects_variable_too_long
-    offenses = offenses('verylongvariablex = 1')
-    assert_equal(1, offenses.size, 'Variable longer than 16 chars should be rejected')
-  end
-
-  def test_allows_instance_variable
-    offenses = offenses('@foo = 1')
-    assert_equal(0, offenses.size, 'Instance variable should be allowed')
-  end
-
-  def test_allows_class_variable
-    offenses = offenses('@@foo = 1')
-    assert_equal(0, offenses.size, 'Class variable should be allowed')
-  end
-
-  def test_allows_global_variable
-    offenses = offenses('$foo = 1')
-    assert_equal(0, offenses.size, 'Global variable should be allowed')
-  end
-
-  def test_allows_test_prefix
-    offenses = offenses('test_foo = 1')
-    assert_equal(0, offenses.size, 'Variable with test_ prefix should be allowed')
-  end
-
-  def test_allows_fake_prefix
-    offenses = offenses('fake_bar = 1')
-    assert_equal(0, offenses.size, 'Variable with fake_ prefix should be allowed')
-  end
-
-  def test_allows_the_prefix
-    offenses = offenses('the_item = 1')
-    assert_equal(0, offenses.size, 'Variable with the_ prefix should be allowed')
-  end
-
-  def test_rejects_instance_variable_with_underscore
-    offenses = offenses('@foo_bar = 1')
-    assert_equal(1, offenses.size, 'Instance variable with underscore should be rejected')
+  [
+    ['foo_bar', 'underscore in name'],
+    ['fooBar', 'uppercase in name'],
+    ['verylongvariablex', 'longer than 16 chars'],
+    ['@foo_bar', 'instance variable with underscore']
+  ].each do |variable, description|
+    define_method("test_rejects_#{description.gsub(/\s+/, '_')}") do
+      assert_equal(1, offenses("#{variable} = 1").size, "#{description} should be rejected")
+    end
   end
 
   private
 
   def offenses(source)
-    config = RuboCop::Config.new(
-      'Elegant/GoodVariableName' => {
-        'Enabled' => true,
-        'Pattern' => '^(@|@@|\$|the_|test_|fake_)?[a-z]{1,16}$'
-      }
-    )
+    path = File.expand_path('../../config/default.yml', __dir__)
+    yaml = YAML.safe_load(File.read(path))
+    config = RuboCop::Config.new('Elegant/GoodVariableName' => yaml['Elegant/GoodVariableName'])
     cop = RuboCop::Cop::Elegant::GoodVariableName.new(config)
     commissioner = RuboCop::Cop::Commissioner.new([cop], [], raise_error: true)
     processed = RuboCop::ProcessedSource.new(source, Float(RUBY_VERSION[/[0-9]+.[0-9]+/]))

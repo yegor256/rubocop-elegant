@@ -16,7 +16,7 @@ Elegant/GoodVariableName:
   Description: 'Checks that variable names match the configured pattern'
   Enabled: true
   VersionAdded: '0.0.3'
-  Pattern: '^(@|@@|\$|the_|test_|fake_)?[a-z]{1,16}$'
+  Pattern: '^(@{1,2}|\$)?(the_|test_|fake_)?[a-z]{1,16}$'
 Elegant/GoodMethodName:
   Description: 'Checks that method names match the configured pattern'
   Enabled: true
