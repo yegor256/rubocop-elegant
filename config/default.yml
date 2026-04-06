@@ -17,6 +17,10 @@ Naming/VariableName:
   ForbiddenPatterns:
     - '_'
     - '^.{17,}$'
+Naming/MethodName:
+  ForbiddenPatterns:
+    - '_'
+    - '^.{17,}$'
 Style/IfUnlessModifier:
   Enabled: false
 Naming/FileName:
