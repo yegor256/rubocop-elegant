@@ -25,14 +25,21 @@ First, install it:
 gem install rubocop-elegant
 ```
 
-Then, add it to your `.rubocop.yml`:
+Then, format your `.rubocop.yml` like this:
 
 ```yaml
+AllCops:
+  EnabledByDefault: true
+  NewCops: enable
 plugins:
-  - rubocop-elegant
+  - rubocop-minitest
+  - rubocop-performance
+  - rubocop-rake
+  - rubocop-elegant # must be the last one
 ```
 
-Should work.
+The `rubocop-elegant` not only provides its own cops, but also configures
+  default ones the "right" way.
 
 ## How to contribute
 
