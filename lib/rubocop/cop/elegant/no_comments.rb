@@ -40,8 +40,14 @@ module RuboCop
           return @gemspec if defined?(@gemspec)
           path = processed_source.path
           return @gemspec = false if path.nil?
-          dir = File.dirname(path)
-          @gemspec = Dir.glob(File.join(dir, '*.gemspec')).any?
+          @gemspec = root(File.dirname(path))
+        end
+
+        def root(dir)
+          return true if Dir.glob(File.join(dir, '*.gemspec')).any?
+          parent = File.dirname(dir)
+          return false if parent == dir
+          root(parent)
         end
 
         def docblock?(comment)
