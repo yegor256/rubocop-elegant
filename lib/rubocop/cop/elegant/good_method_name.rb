@@ -21,12 +21,17 @@ module RuboCop
         private
 
         def check(node, name)
+          return if allowed?(name)
           return if match?(name)
           add_offense(node, message: format(MSG, name: name))
         end
 
         def match?(name)
           pattern.match?(name)
+        end
+
+        def allowed?(name)
+          Array(cop_config['AllowedNames']).map(&:to_s).include?(name)
         end
 
         def pattern

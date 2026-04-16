@@ -17,11 +17,13 @@ Elegant/GoodVariableName:
   Enabled: true
   VersionAdded: '0.0.3'
   Pattern: '^(_.*|(@{1,2}|\$)?(the_|test_|fake_)?[a-z]{1,16})$'
+  AllowedNames: []
 Elegant/GoodMethodName:
   Description: 'Checks that method names match the configured pattern'
   Enabled: true
   VersionAdded: '0.0.3'
   Pattern: '^(((to|fake|the|with|without|on)_)?[a-z]{1,16}[!?]?|test_[a-z_]+)$'
+  AllowedNames: []
 
 Naming/VariableName:
   Enabled: false

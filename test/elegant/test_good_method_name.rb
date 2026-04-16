@@ -33,12 +33,29 @@ class GoodMethodNameTest < Minitest::Test
     end
   end
 
+  def test_allows_explicitly_listed_name
+    assert_equal(
+      0,
+      offenses('def fooBar; end', 'AllowedNames' => ['fooBar']).size,
+      'explicitly allowed method name cannot be rejected'
+    )
+  end
+
+  def test_still_rejects_name_not_in_allowed_list
+    assert_equal(
+      1,
+      offenses('def fooBar; end', 'AllowedNames' => ['other']).size,
+      'method name outside allowed list cannot be accepted'
+    )
+  end
+
   private
 
-  def offenses(source)
+  def offenses(source, overrides = {})
     path = File.expand_path('../../config/default.yml', __dir__)
     yaml = YAML.safe_load(File.read(path))
-    config = RuboCop::Config.new({ 'Elegant/GoodMethodName' => yaml['Elegant/GoodMethodName'] })
+    settings = yaml['Elegant/GoodMethodName'].merge(overrides)
+    config = RuboCop::Config.new({ 'Elegant/GoodMethodName' => settings })
     cop = RuboCop::Cop::Elegant::GoodMethodName.new(config)
     commissioner = RuboCop::Cop::Commissioner.new([cop], [], raise_error: true)
     processed = RuboCop::ProcessedSource.new(source, Float(RUBY_VERSION[/[0-9]+.[0-9]+/]))

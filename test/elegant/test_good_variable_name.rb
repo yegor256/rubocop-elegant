@@ -38,12 +38,29 @@ class GoodVariableNameTest < Minitest::Test
     end
   end
 
+  def test_allows_explicitly_listed_name
+    assert_equal(
+      0,
+      offenses('fooBar = 1', 'AllowedNames' => ['fooBar']).size,
+      'explicitly allowed variable name cannot be rejected'
+    )
+  end
+
+  def test_still_rejects_name_not_in_allowed_list
+    assert_equal(
+      1,
+      offenses('fooBar = 1', 'AllowedNames' => ['other']).size,
+      'variable name outside allowed list cannot be accepted'
+    )
+  end
+
   private
 
-  def offenses(source)
+  def offenses(source, overrides = {})
     path = File.expand_path('../../config/default.yml', __dir__)
     yaml = YAML.safe_load(File.read(path))
-    config = RuboCop::Config.new({ 'Elegant/GoodVariableName' => yaml['Elegant/GoodVariableName'] })
+    settings = yaml['Elegant/GoodVariableName'].merge(overrides)
+    config = RuboCop::Config.new({ 'Elegant/GoodVariableName' => settings })
     cop = RuboCop::Cop::Elegant::GoodVariableName.new(config)
     commissioner = RuboCop::Cop::Commissioner.new([cop], [], raise_error: true)
     processed = RuboCop::ProcessedSource.new(source, Float(RUBY_VERSION[/[0-9]+.[0-9]+/]))
