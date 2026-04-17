@@ -25,6 +25,8 @@ Elegant/GoodMethodName:
   Pattern: '^(((to|fake|the|with|without|on)_)?[a-z]{1,16}[!?]?|test_[a-z_]+)$'
   AllowedNames: []
 
+Style/RedundantException:
+  Enabled: false
 Naming/VariableName:
   Enabled: false
 Naming/MethodName:
