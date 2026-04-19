@@ -33,8 +33,12 @@ Naming/MethodName:
   Enabled: false
 Metrics/ModuleLength:
   Max: 500
+  Exclude:
+    - '**/*Test.rb'
 Metrics/ClassLength:
   Max: 300
+  Exclude:
+    - '**/*Test.rb'
 Metrics/MethodLength:
   Max: 100
 Metrics/BlockLength:
