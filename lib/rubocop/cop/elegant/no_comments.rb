@@ -12,13 +12,11 @@ module RuboCop
         MSG = 'Comment is not allowed, unless it is SPDX, magic, rubocop directive, or docblock'
         public_constant :MSG
 
-        # rubocop:disable Elegant/GoodMethodName
         def on_new_investigation
           processed_source.comments.each do |comment|
             register(comment) unless allowed?(comment)
           end
         end
-        # rubocop:enable Elegant/GoodMethodName
 
         private
 

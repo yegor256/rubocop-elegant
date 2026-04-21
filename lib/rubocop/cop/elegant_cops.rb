@@ -6,4 +6,5 @@ require_relative 'elegant/good_variable_name'
 # SPDX-License-Identifier: MIT
 
 require_relative 'elegant/no_comments'
+require_relative 'elegant/no_empty_lines_in_blocks'
 require_relative 'elegant/no_empty_lines_in_methods'

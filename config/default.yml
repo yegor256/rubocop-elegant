@@ -12,6 +12,10 @@ Elegant/NoEmptyLinesInMethods:
   Description: 'Disallows empty lines inside method bodies'
   Enabled: true
   VersionAdded: '0.0.2'
+Elegant/NoEmptyLinesInBlocks:
+  Description: 'Disallows empty lines inside blocks (do/end, if/end, while, case, begin, etc.)'
+  Enabled: true
+  VersionAdded: '0.0.19'
 Elegant/GoodVariableName:
   Description: 'Checks that variable names match the configured pattern'
   Enabled: true
@@ -22,7 +26,7 @@ Elegant/GoodMethodName:
   Description: 'Checks that method names match the configured pattern'
   Enabled: true
   VersionAdded: '0.0.3'
-  Pattern: '^(((to|fake|the|with|without|on)_)?[a-z]{1,16}[!?]?|test_[a-z_]+)$'
+  Pattern: '^(((to|fake|the|with|without)_)?[a-z]{1,16}[!?]?|(on|test)_[a-z_]+)$'
   AllowedNames: []
 
 Style/RedundantException:
