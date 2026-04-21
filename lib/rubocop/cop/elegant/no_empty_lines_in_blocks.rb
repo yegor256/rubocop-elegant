@@ -15,6 +15,7 @@ module RuboCop
         def on_new_investigation
           super
           @reported = []
+          @gaps = scan
         end
 
         def on_block(node)
@@ -71,10 +72,27 @@ module RuboCop
         def empty(lines)
           result = []
           lines.each do |num|
+            next if @gaps.include?(num)
             line = processed_source.lines[num - 1]
             result << num if line.strip.empty?
           end
           result
+        end
+
+        def scan
+          gaps = []
+          ast = processed_source.ast
+          return gaps if ast.nil?
+          ast.each_node(:def, :defs) do |node|
+            nxt = node.right_sibling
+            next unless nxt.is_a?(RuboCop::AST::Node)
+            next unless %i[def defs].include?(nxt.type)
+            first = node.last_line + 1
+            last = nxt.first_line - 1
+            next if first > last
+            (first..last).each { |n| gaps << n }
+          end
+          gaps
         end
 
         def register(num)
