@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2019-2026 Yegor Bugayenko
 # SPDX-License-Identifier: MIT
 ---
+# yamllint disable rule:line-length
 inherit_from: config/default.yml
 AllCops:
   DisplayCopNames: true
