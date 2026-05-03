@@ -38,7 +38,7 @@ plugins:
   - rubocop-elegant # must be the last one
 ```
 
-The `rubocop-elegant` not only provides its own cops, but also configures
+The `rubocop-elegant` plugin not only provides its own cops, but also configures
   default ones the "right" way.
 
 ## How to contribute
