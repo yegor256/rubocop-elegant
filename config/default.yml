@@ -21,6 +21,13 @@ Elegant/PairedBrackets:
   Description: 'Enforces the paired brackets notation: a bracket must pair on the same line, or start/end its line'
   Enabled: true
   VersionAdded: '0.0.20'
+Elegant/ClassInModule:
+  Description: 'Requires every class to be defined inside a module, not globally'
+  Enabled: true
+  VersionAdded: '0.0.21'
+  Exclude:
+    - '**/*Test.rb'
+    - '**/test_*.rb'
 Elegant/GoodVariableName:
   Description: 'Checks that variable names match the configured pattern'
   Enabled: true
