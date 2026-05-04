@@ -6,6 +6,7 @@ require_relative 'elegant/good_variable_name'
 # SPDX-FileCopyrightText: Copyright (c) 2019-2026 Yegor Bugayenko
 # SPDX-License-Identifier: MIT
 
+require_relative 'elegant/indentation_ladder'
 require_relative 'elegant/no_comments'
 require_relative 'elegant/no_empty_lines_in_blocks'
 require_relative 'elegant/no_empty_lines_in_methods'

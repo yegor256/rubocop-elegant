@@ -24,10 +24,14 @@ Elegant/PairedBrackets:
 Elegant/ClassInModule:
   Description: 'Requires every class to be defined inside a module, not globally'
   Enabled: true
-  VersionAdded: '0.0.21'
+  VersionAdded: '0.1.0'
   Exclude:
     - '**/*Test.rb'
     - '**/test_*.rb'
+Elegant/IndentationLadder:
+  Description: 'Requires the indentation step to be exactly two spaces when a line indents to the right of the previous one'
+  Enabled: true
+  VersionAdded: '0.1.0'
 Elegant/GoodVariableName:
   Description: 'Checks that variable names match the configured pattern'
   Enabled: true
