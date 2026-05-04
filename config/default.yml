@@ -17,6 +17,10 @@ Elegant/NoEmptyLinesInBlocks:
   Description: 'Disallows empty lines inside blocks (do/end, if/end, while, case, begin, etc.)'
   Enabled: true
   VersionAdded: '0.0.19'
+Elegant/PairedBrackets:
+  Description: 'Enforces the paired brackets notation: a bracket must pair on the same line, or start/end its line'
+  Enabled: true
+  VersionAdded: '0.0.20'
 Elegant/GoodVariableName:
   Description: 'Checks that variable names match the configured pattern'
   Enabled: true

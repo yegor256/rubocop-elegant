@@ -124,8 +124,10 @@ class NoEmptyLinesInBlocksTest < Minitest::Test
   def test_allows_empty_lines_between_sibling_defs_nested_in_class_in_block
     source = "describe do\n  class Foo\n    def a\n      1\n    end\n\n    def b\n      2\n    end\n  end\nend"
     offenses = offenses(source)
-    assert_equal(0, offenses.size,
-                 'Empty line between sibling defs inside a class inside a block should not be flagged')
+    assert_equal(
+      0, offenses.size,
+      'Empty line between sibling defs inside a class inside a block should not be flagged'
+    )
   end
 
   def test_deduplicates_nested_blocks
