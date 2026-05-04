@@ -127,7 +127,7 @@ class NoCommentsTest < Minitest::Test
     end
   end
 
-  def test_allows_multiline_docblock_when_gemspec_present
+  def test_allows_multiline_docblock_with_gemspec
     Dir.mktmpdir do |dir|
       FileUtils.touch(File.join(dir, 'foo.gemspec'))
       source = "# First line of docblock.\n# Second line of docblock.\ndef foo; end"
@@ -144,7 +144,7 @@ class NoCommentsTest < Minitest::Test
     end
   end
 
-  def test_disallows_non_docblock_comment_even_with_gemspec
+  def test_disallows_non_docblock_comment_with_gemspec
     Dir.mktmpdir do |dir|
       FileUtils.touch(File.join(dir, 'foo.gemspec'))
       source = "# random comment\nx = 1\ndef foo; end"

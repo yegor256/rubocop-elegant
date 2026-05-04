@@ -31,7 +31,7 @@ Elegant/GoodMethodName:
   Description: 'Checks that method names match the configured pattern'
   Enabled: true
   VersionAdded: '0.0.3'
-  Pattern: '^(((to|fake|the|with|without)_)?[a-z]{1,16}[!?]?|(on|test)_[a-z_]+)$'
+  Pattern: '^(?=.{1,48}$)(((to|fake|the|with|without)_)?[a-z]{1,16}[!?]?|(on|test)_[a-z_]+)$'
   AllowedNames: []
 
 Style/RedundantException:

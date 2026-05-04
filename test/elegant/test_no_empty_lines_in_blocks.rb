@@ -7,13 +7,13 @@ require_relative '../../lib/rubocop-elegant'
 require_relative '../test__helper'
 
 class NoEmptyLinesInBlocksTest < Minitest::Test
-  def test_registers_offense_for_empty_line_in_do_block
+  def test_registers_offense_for_empty_line_in_do
     source = "loop do\n  x = 1\n\n  x\nend"
     offenses = offenses(source)
     assert_equal(1, offenses.size, 'Expected offense not registered for empty line in do/end block')
   end
 
-  def test_registers_offense_for_empty_line_in_brace_block
+  def test_registers_offense_for_empty_line_in_brace
     source = "[1].each { |x|\n  y = x\n\n  y\n}"
     offenses = offenses(source)
     assert_equal(1, offenses.size, 'Expected offense not registered for empty line in brace block')
@@ -67,7 +67,7 @@ class NoEmptyLinesInBlocksTest < Minitest::Test
     assert_equal(1, offenses.size, 'Expected offense not registered for empty line in begin/end')
   end
 
-  def test_registers_offense_for_empty_line_in_numblock
+  def test_registers_offense_for_empty_line_in_num
     source = "[1].each do\n  puts _1\n\n  puts _1\nend"
     offenses = offenses(source)
     assert_equal(1, offenses.size, 'Expected offense not registered for empty line in numbered block')
@@ -109,19 +109,19 @@ class NoEmptyLinesInBlocksTest < Minitest::Test
     assert_equal(0, offenses.size, 'Empty line between class methods should not be flagged')
   end
 
-  def test_allows_empty_lines_between_sibling_defs_in_do_block
+  def test_allows_empty_lines_between_defs_in_do_block
     source = "refine Foo do\n  def a\n    1\n  end\n\n  def b\n    2\n  end\nend"
     offenses = offenses(source)
     assert_equal(0, offenses.size, 'Empty line between sibling defs inside a do/end block should not be flagged')
   end
 
-  def test_allows_empty_lines_between_sibling_defs_in_begin
+  def test_allows_empty_lines_between_defs_in_begin
     source = "begin\n  def a\n    1\n  end\n\n  def b\n    2\n  end\nend"
     offenses = offenses(source)
     assert_equal(0, offenses.size, 'Empty line between sibling defs inside a begin/end block should not be flagged')
   end
 
-  def test_allows_empty_lines_between_sibling_defs_nested_in_class_in_block
+  def test_allows_empty_lines_in_nested_class
     source = "describe do\n  class Foo\n    def a\n      1\n    end\n\n    def b\n      2\n    end\n  end\nend"
     offenses = offenses(source)
     assert_equal(
