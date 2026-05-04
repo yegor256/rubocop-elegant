@@ -11,7 +11,7 @@ class PairedBracketsTest < Minitest::Test
     'paired_parens_on_same_line' => 'foo(1, 2)',
     'paired_square_brackets_on_same_line' => '[1, 2, 3]',
     'paired_curly_braces_on_same_line' => '{ a: 1, b: 2 }',
-    'opener_at_end_of_line_and_closer_at_start' => "foo(\n  1\n)",
+    'opener_ends_line_closer_starts_line' => "foo(\n  1\n)",
     'split_square_brackets_at_line_edges' => "[\n  1,\n  2\n]",
     'split_curly_braces_at_line_edges' => "{\n  a: 1\n}",
     'block_brace_paired_on_same_line' => '[1].each { |x| x }',
@@ -35,7 +35,7 @@ class PairedBracketsTest < Minitest::Test
     'opener_not_at_end_of_line' => ["foo(1,\n  2\n)", 1],
     'split_square_brackets_in_middle' => ["[1,\n 2]", 2],
     'block_brace_with_argument_split' => ["[1].each { |x|\n  x\n}", 1],
-    'closer_not_at_start_when_chained_in_middle' => ["foo(\n  1).bar", 1]
+    'closer_in_middle_when_chained' => ["foo(\n  1).bar", 1]
   }.freeze
   public_constant :VIOLATIONS
 
@@ -47,7 +47,7 @@ class PairedBracketsTest < Minitest::Test
   end
 
   VIOLATIONS.each do |name, (source, count)|
-    define_method("test_registers_offense_for_#{name}") do
+    define_method("test_rejects_#{name}") do
       total = offenses(source).size
       assert_equal(count, total, "Expected #{count} offense(s) for #{name.tr('_', ' ')}, got #{total}")
     end
