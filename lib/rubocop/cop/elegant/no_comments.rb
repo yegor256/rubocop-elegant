@@ -50,8 +50,7 @@ class RuboCop::Cop::Elegant::NoComments < RuboCop::Cop::Base
   def docblock?(comment)
     line = comment.location.line
     successor = codeline(line)
-    return false if successor.nil?
-    definition?(successor)
+    successor.positive? && definition?(successor)
   end
 
   def codeline(start)
@@ -63,7 +62,7 @@ class RuboCop::Cop::Elegant::NoComments < RuboCop::Cop::Base
       next if stripped.empty? || stripped.start_with?('#')
       return idx + 1
     end
-    nil
+    0
   end
 
   def definition?(line)
