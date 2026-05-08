@@ -18,6 +18,18 @@ Default RuboCop configuration is too permissive, allowing coding practices
   cryptic variable names, and so on.
 This plugin configures existing RuboCop cops with stricter settings
   and adds custom cops for rules that RuboCop doesn't provide out of the box.
+The custom cops add the following restrictions:
+
+* Classes must live inside a module; top-level classes are forbidden.
+* A class nested in a module must use compact namespace syntax.
+* Method names must be single lowercase verbs.
+* Variable names must be single lowercase nouns.
+* Each indentation step must add exactly two spaces.
+* Comments are forbidden, except SPDX, magic, RuboCop directives, and class docblocks.
+* Empty lines inside block bodies are forbidden.
+* Empty lines inside method bodies are forbidden.
+* A method cannot return `nil` explicitly.
+* Brackets must be paired on the same line, or start/end their own line.
 
 First, install it:
 
