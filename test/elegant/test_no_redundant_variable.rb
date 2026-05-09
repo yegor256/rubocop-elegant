@@ -65,6 +65,29 @@ class NoRedundantVariableTest < Minitest::Test
   }.freeze
   public_constant :VIOLATIONS
 
+  AUTOCORRECTIONS = {
+    'send_call_inlines_unwrapped' =>
+      ["def foo\n  x = bar\n  baz(x)\nend", "def foo\n  baz(bar)\nend"],
+    'integer_literal_inlines_unwrapped' =>
+      ["def foo\n  x = 42\n  baz(x)\nend", "def foo\n  baz(42)\nend"],
+    'returned_directly_inlines' =>
+      ["def foo\n  x = compute\n  x\nend", "def foo\n  compute\nend"],
+    'binary_operator_wrapped_in_parens' =>
+      ["def foo\n  x = a + b\n  baz(x)\nend", "def foo\n  baz((a + b))\nend"],
+    'ternary_wrapped_in_parens' =>
+      ["def foo\n  x = cond ? a : b\n  baz(x)\nend", "def foo\n  baz((cond ? a : b))\nend"],
+    'braceless_hash_inlines_with_braces' =>
+      ["def foo\n  x = a: 1, b: 2\n  baz(x)\nend", "def foo\n  baz({ a: 1, b: 2 })\nend"],
+    'inside_block_inlines' =>
+      ["def foo\n  arr.each do |e|\n    y = e.bar\n    baz(y)\n  end\nend",
+       "def foo\n  arr.each do |e|\n    baz(e.bar)\n  end\nend"],
+    'multiple_redundant_inline_together' =>
+      ["def foo\n  a = one\n  b = two\n  bar(a, b)\nend", "def foo\n  bar(one, two)\nend"],
+    'class_method_inlines' =>
+      ["def self.foo\n  x = bar\n  baz(x)\nend", "def self.foo\n  baz(bar)\nend"]
+  }.freeze
+  public_constant :AUTOCORRECTIONS
+
   ALLOWED.each do |name, source|
     define_method("test_allows_#{name}") do
       total = offenses(source).size
@@ -76,6 +99,14 @@ class NoRedundantVariableTest < Minitest::Test
     define_method("test_registers_offense_for_#{name}") do
       total = offenses(source).size
       assert_equal(count, total, "Expected #{count} offense(s) for #{name.tr('_', ' ')}, got #{total}")
+    end
+  end
+
+  AUTOCORRECTIONS.each do |name, (source, expected)|
+    define_method("test_auto_corrects_#{name}") do
+      fixed = autocorrect(source)
+      msg = "Auto-correct on #{name.tr('_', ' ')} did not produce #{expected.inspect}, got #{fixed.inspect}"
+      assert_equal(expected, fixed, msg)
     end
   end
 
@@ -97,5 +128,15 @@ class NoRedundantVariableTest < Minitest::Test
     ).investigate(
       RuboCop::ProcessedSource.new(source, Float(RUBY_VERSION[/[0-9]+.[0-9]+/]))
     ).offenses
+  end
+
+  def autocorrect(source)
+    processed = RuboCop::ProcessedSource.new(source, Float(RUBY_VERSION[/[0-9]+.[0-9]+/]))
+    found = RuboCop::Cop::Commissioner.new(
+      [RuboCop::Cop::Elegant::NoRedundantVariable.new(RuboCop::Config.new)], [], raise_error: true
+    ).investigate(processed).offenses
+    corrector = RuboCop::Cop::Corrector.new(processed)
+    found.each { |o| corrector.merge!(o.corrector) unless o.corrector.nil? }
+    corrector.process
   end
 end
