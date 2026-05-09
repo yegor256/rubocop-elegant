@@ -67,7 +67,8 @@ class PairedBracketsTest < Minitest::Test
   AUTOCORRECTIONS.each do |name, (source, expected)|
     define_method("test_auto_corrects_#{name}") do
       fixed = autocorrect(source)
-      assert_equal(expected, fixed, "Expected auto-correct on #{name.tr('_', ' ')} to produce #{expected.inspect}, got #{fixed.inspect}")
+      msg = "Auto-correct on #{name.tr('_', ' ')} did not produce #{expected.inspect}, got #{fixed.inspect}"
+      assert_equal(expected, fixed, msg)
     end
   end
 
@@ -83,8 +84,9 @@ class PairedBracketsTest < Minitest::Test
 
   def autocorrect(source)
     processed = RuboCop::ProcessedSource.new(source, Float(RUBY_VERSION[/[0-9]+.[0-9]+/]))
-    cop = RuboCop::Cop::Elegant::PairedBrackets.new(RuboCop::Config.new)
-    found = RuboCop::Cop::Commissioner.new([cop], [], raise_error: true).investigate(processed).offenses
+    found = RuboCop::Cop::Commissioner.new(
+      [RuboCop::Cop::Elegant::PairedBrackets.new(RuboCop::Config.new)], [], raise_error: true
+    ).investigate(processed).offenses
     corrector = RuboCop::Cop::Corrector.new(processed)
     found.each { |o| corrector.merge!(o.corrector) unless o.corrector.nil? }
     corrector.process
