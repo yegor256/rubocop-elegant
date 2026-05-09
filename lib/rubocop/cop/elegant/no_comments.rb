@@ -48,8 +48,7 @@ class RuboCop::Cop::Elegant::NoComments < RuboCop::Cop::Base
   end
 
   def docblock?(comment)
-    line = comment.location.line
-    successor = codeline(line)
+    successor = codeline(comment.location.line)
     successor.positive? && definition?(successor)
   end
 
@@ -88,15 +87,13 @@ class RuboCop::Cop::Elegant::NoComments < RuboCop::Cop::Base
   end
 
   def fullrange(target)
-    start = target.begin_pos - target.column
     ending = target.end_pos
     ending += 1 if newline?(ending)
-    target.with(begin_pos: start, end_pos: ending)
+    target.with(begin_pos: target.begin_pos - target.column, end_pos: ending)
   end
 
   def prefixed(target, prefix)
-    spaces = prefix.match(/\s*$/)[0]
-    target.with(begin_pos: target.begin_pos - spaces.length, end_pos: target.end_pos)
+    target.with(begin_pos: target.begin_pos - prefix.match(/\s*$/)[0].length, end_pos: target.end_pos)
   end
 
   def newline?(pos)

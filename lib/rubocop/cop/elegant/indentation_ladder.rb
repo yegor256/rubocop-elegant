@@ -44,7 +44,6 @@ class RuboCop::Cop::Elegant::IndentationLadder < RuboCop::Cop::Base
   end
 
   def register(num, step)
-    target = processed_source.buffer.line_range(num)
-    add_offense(target, message: format(MSG, step: step))
+    add_offense(processed_source.buffer.line_range(num), message: format(MSG, step: step))
   end
 end

@@ -12,27 +12,28 @@ class RubocopElegantTest < Minitest::Test
   end
 
   def test_plugin_about_returns_info
-    plugin = RuboCop::Elegant::Plugin.new
-    about = plugin.about
-    assert_equal('rubocop-elegant', about.name, 'Plugin name is wrong')
+    assert_equal('rubocop-elegant', RuboCop::Elegant::Plugin.new.about.name, 'Plugin name is wrong')
   end
 
   def test_plugin_supports_rubocop
-    plugin = RuboCop::Elegant::Plugin.new
-    context = Struct.new(:engine).new(:rubocop)
-    assert(plugin.supported?(context), 'Plugin should support rubocop engine')
+    assert(
+      RuboCop::Elegant::Plugin.new.supported?(Struct.new(:engine).new(:rubocop)),
+      'Plugin should support rubocop engine'
+    )
   end
 
   def test_plugin_does_not_support_other_engines
-    plugin = RuboCop::Elegant::Plugin.new
-    context = Struct.new(:engine).new(:other)
-    refute(plugin.supported?(context), 'Plugin should not support other engines')
+    refute(
+      RuboCop::Elegant::Plugin.new.supported?(Struct.new(:engine).new(:other)),
+      'Plugin should not support other engines'
+    )
   end
 
   def test_plugin_rules_returns_path
-    plugin = RuboCop::Elegant::Plugin.new
-    context = Struct.new(:engine).new(:rubocop)
-    rules = plugin.rules(context)
-    assert_equal(:path, rules.type, 'Rules type should be path')
+    assert_equal(
+      :path,
+      RuboCop::Elegant::Plugin.new.rules(Struct.new(:engine).new(:rubocop)).type,
+      'Rules type should be path'
+    )
   end
 end

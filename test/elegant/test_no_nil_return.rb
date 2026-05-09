@@ -59,19 +59,17 @@ class NoNilReturnTest < Minitest::Test
   end
 
   def test_attributes_offense_only_to_inner_nested_def
-    source = "def foo\n  def bar\n    return nil\n  end\n  42\nend"
-    total = offenses(source).size
+    total = offenses("def foo\n  def bar\n    return nil\n  end\n  42\nend").size
     assert_equal(1, total, "Inner def with return nil should produce exactly 1 offense, got #{total}")
   end
 
   private
 
   def offenses(source)
-    config = RuboCop::Config.new
-    cop = RuboCop::Cop::Elegant::NoNilReturn.new(config)
-    commissioner = RuboCop::Cop::Commissioner.new([cop], [], raise_error: true)
-    processed = RuboCop::ProcessedSource.new(source, Float(RUBY_VERSION[/[0-9]+.[0-9]+/]))
-    result = commissioner.investigate(processed)
-    result.offenses
+    RuboCop::Cop::Commissioner.new(
+      [RuboCop::Cop::Elegant::NoNilReturn.new(RuboCop::Config.new)], [], raise_error: true
+    ).investigate(
+      RuboCop::ProcessedSource.new(source, Float(RUBY_VERSION[/[0-9]+.[0-9]+/]))
+    ).offenses
   end
 end

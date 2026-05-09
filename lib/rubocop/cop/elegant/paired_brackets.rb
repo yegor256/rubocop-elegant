@@ -48,13 +48,11 @@ class RuboCop::Cop::Elegant::PairedBrackets < RuboCop::Cop::Base
   end
 
   def starts?(tok)
-    line = processed_source.lines[tok.line - 1]
-    line[0...tok.column].strip.empty?
+    processed_source.lines[tok.line - 1][0...tok.column].strip.empty?
   end
 
   def ends?(tok)
-    line = processed_source.lines[tok.line - 1]
-    after = line[(tok.column + tok.text.length)..-1].to_s.strip
+    after = processed_source.lines[tok.line - 1][(tok.column + tok.text.length)..-1].to_s.strip
     after.empty? || after.start_with?('#')
   end
 

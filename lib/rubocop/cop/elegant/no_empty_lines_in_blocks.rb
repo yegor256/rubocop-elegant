@@ -70,8 +70,7 @@ class RuboCop::Cop::Elegant::NoEmptyLinesInBlocks < RuboCop::Cop::Base
     result = []
     lines.each do |num|
       next if @gaps.include?(num)
-      line = processed_source.lines[num - 1]
-      result << num if line.strip.empty?
+      result << num if processed_source.lines[num - 1].strip.empty?
     end
     result
   end

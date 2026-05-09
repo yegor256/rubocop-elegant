@@ -29,6 +29,7 @@ The custom cops add the following restrictions:
 * Empty lines inside block bodies are forbidden.
 * Empty lines inside method bodies are forbidden.
 * A method cannot return `nil` explicitly.
+* Local variables that are assigned once and read once must be inlined.
 * Brackets must be paired on the same line, or start/end their own line.
 
 First, install it:
