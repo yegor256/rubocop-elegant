@@ -11,10 +11,14 @@
 # rescue variables, and assignments embedded into expressions such
 # as +if+ or +while+ conditions; only top-level statements of a
 # sequence are considered. A variable whose single read sits inside
-# a loop or block that does not also enclose the assignment is
-# left alone, because inlining would re-evaluate the right-hand
-# side on every iteration. A variable that is reassigned, read
-# more than once, or never read is left alone too.
+# a context that does not also enclose the assignment is left alone:
+# loops or blocks (+block+, +numblock+, +while+, +until+, +for+) so
+# that inlining does not move the right-hand side into a hot path,
+# and conditional branches (+if+, +case+, +case_match+, +and+, +or+,
+# +rescue+, +resbody+, +ensure+) so that inlining does not change
+# whether or when the right-hand side is evaluated. A variable that
+# is reassigned, read more than once, or never read is left alone
+# too.
 class RuboCop::Cop::Elegant::NoRedundantVariable < RuboCop::Cop::Base
   MSG = 'Variable "%<name>s" is redundant and must be inlined: it is read only once'
   public_constant :MSG
@@ -25,17 +29,23 @@ class RuboCop::Cop::Elegant::NoRedundantVariable < RuboCop::Cop::Base
   LOOP_TYPES = %i[block numblock while until while_post until_post for].freeze
   public_constant :LOOP_TYPES
 
+  ALWAYS_FIRST_TYPES = %i[if case case_match and or].freeze
+  public_constant :ALWAYS_FIRST_TYPES
+
+  ALWAYS_HOIST_TYPES = %i[rescue resbody ensure].freeze
+  public_constant :ALWAYS_HOIST_TYPES
+
   def on_def(node)
-    inspect(node.body)
+    check(node.body)
   end
 
   def on_defs(node)
-    inspect(node.body)
+    check(node.body)
   end
 
   private
 
-  def inspect(body)
+  def check(body)
     return if body.nil?
     assigns = Hash.new { |h, k| h[k] = [] }
     reads = Hash.new { |h, k| h[k] = [] }
@@ -83,11 +93,16 @@ class RuboCop::Cop::Elegant::NoRedundantVariable < RuboCop::Cop::Base
 
   def hoisted?(read, assign)
     boundary = assign.parent
+    return true if boundary.nil?
+    child = read
     parent = read.parent
-    while parent && !parent.equal?(boundary)
+    while !parent.nil? && !parent.equal?(boundary)
       return true if LOOP_TYPES.include?(parent.type)
+      return true if ALWAYS_HOIST_TYPES.include?(parent.type)
+      return true if ALWAYS_FIRST_TYPES.include?(parent.type) && !parent.children.first.equal?(child)
+      child = parent
       parent = parent.parent
     end
-    false
+    parent.nil?
   end
 end

@@ -28,7 +28,17 @@ class NoRedundantVariableTest < Minitest::Test
     'read_inside_while_loop' => "def foo\n  x = compute\n  while cond\n    bar(x)\n  end\nend",
     'read_inside_until_loop' => "def foo\n  x = compute\n  until cond\n    bar(x)\n  end\nend",
     'read_inside_for_loop' => "def foo\n  x = compute\n  for e in arr\n    bar(x, e)\n  end\nend",
-    'read_inside_nested_block' => "def foo\n  x = compute\n  arr.each { |a| a.each { |b| bar(x, b) } }\nend"
+    'read_inside_nested_block' => "def foo\n  x = compute\n  arr.each { |a| a.each { |b| bar(x, b) } }\nend",
+    'assigned_in_block_read_outside' => "def foo\n  x = nil\n  arr.each { |e| x = e }\n  bar(x)\nend",
+    'read_inside_if_branch' => "def foo\n  x = compute\n  bar(x) if cond\nend",
+    'read_inside_full_if_then_branch' => "def foo\n  x = compute\n  if cond\n    bar(x)\n  end\nend",
+    'read_inside_if_else_branch' => "def foo\n  x = compute\n  if cond\n    bar\n  else\n    bar(x)\n  end\nend",
+    'read_inside_case_when_branch' => "def foo\n  x = compute\n  case y\n  when 1\n    bar(x)\n  end\nend",
+    'read_inside_case_match_in_branch' => "def foo\n  x = compute\n  case y\n  in 1\n    bar(x)\n  end\nend",
+    'read_inside_and_rhs' => "def foo\n  x = compute\n  cond && bar(x)\nend",
+    'read_inside_or_rhs' => "def foo\n  x = compute\n  cond || bar(x)\nend",
+    'read_inside_rescue_body' => "def foo\n  x = compute\n  bar\nrescue\n  baz(x)\nend",
+    'read_inside_ensure' => "def foo\n  x = compute\n  bar\nensure\n  baz(x)\nend"
   }.freeze
   public_constant :ALLOWED
 
@@ -45,7 +55,13 @@ class NoRedundantVariableTest < Minitest::Test
       ["def foo\n  x = bar\n  baz(x)\nend\ndef qux\n  y = bar\n  baz(y)\nend", 2],
     'inlinable_returned_directly' => ["def foo\n  x = compute\n  x\nend", 1],
     'inlinable_inside_if_branch' =>
-      ["def foo\n  if cond\n    x = bar\n    baz(x)\n  end\nend", 1]
+      ["def foo\n  if cond\n    x = bar\n    baz(x)\n  end\nend", 1],
+    'read_in_if_condition_position' =>
+      ["def foo\n  x = bar\n  baz if x.empty?\nend", 1],
+    'read_in_and_lhs_position' =>
+      ["def foo\n  x = bar\n  baz(x) && qux\nend", 1],
+    'read_in_case_subject_position' =>
+      ["def foo\n  x = bar\n  case x\n  when 1\n    one\n  end\nend", 1]
   }.freeze
   public_constant :VIOLATIONS
 
