@@ -9,8 +9,17 @@
 # closing). Brackets stranded in the middle of a multi-line expression
 # are forbidden because they hide the structure of the code.
 #
+# Auto-correct relocates the offending bracket onto its own line: an
+# opener that is not at end-of-line gets a newline and the opener-line
+# indent plus two spaces inserted right after it; a closer that is not
+# at start-of-line gets a newline and the opener-line indent inserted
+# right before it. Surrounding indentation may still need a follow-up
+# layout pass, but the brackets themselves end up paired.
+#
 # See https://www.yegor256.com/2014/10/23/paired-brackets-notation.html
 class RuboCop::Cop::Elegant::PairedBrackets < RuboCop::Cop::Base
+  extend RuboCop::Cop::AutoCorrector
+
   MSG = 'Bracket %<text>s must be paired on the same line, or start/end its line'
   public_constant :MSG
 
@@ -43,8 +52,9 @@ class RuboCop::Cop::Elegant::PairedBrackets < RuboCop::Cop::Base
   def check(duo)
     opener, closer = duo
     return if opener.line == closer.line
-    register(opener) unless ends?(opener)
-    register(closer) unless starts?(closer)
+    indent = leading(opener)
+    register(opener) { |corrector| corrector.insert_after(opener.pos, "\n#{indent}  ") } unless ends?(opener)
+    register(closer) { |corrector| corrector.insert_before(closer.pos, "\n#{indent}") } unless starts?(closer)
   end
 
   def starts?(tok)
@@ -56,7 +66,11 @@ class RuboCop::Cop::Elegant::PairedBrackets < RuboCop::Cop::Base
     after.empty? || after.start_with?('#')
   end
 
-  def register(tok)
-    add_offense(tok.pos, message: format(MSG, text: tok.text))
+  def leading(tok)
+    processed_source.lines[tok.line - 1][/\A[ \t]*/]
+  end
+
+  def register(tok, &block)
+    add_offense(tok.pos, message: format(MSG, text: tok.text), &block)
   end
 end
