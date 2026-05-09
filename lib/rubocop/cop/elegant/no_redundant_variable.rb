@@ -19,7 +19,19 @@
 # whether or when the right-hand side is evaluated. A variable that
 # is reassigned, read more than once, or never read is left alone
 # too.
+#
+# Auto-correct inlines the redundant assignment: it replaces the
+# single +lvar+ read with the source of the assignment's right-hand
+# side, then removes the whole assignment line including its leading
+# indent and trailing newline. The right-hand side is wrapped in
+# parentheses unless it is already a primary expression (literal,
+# variable, parenthesized expression, or method call with parentheses
+# or no arguments), so that operator precedence at the read site is
+# preserved.
 class RuboCop::Cop::Elegant::NoRedundantVariable < RuboCop::Cop::Base
+  extend RuboCop::Cop::AutoCorrector
+  include RuboCop::Cop::RangeHelp
+
   MSG = 'Variable "%<name>s" is redundant and must be inlined: it is read only once'
   public_constant :MSG
 
@@ -34,6 +46,12 @@ class RuboCop::Cop::Elegant::NoRedundantVariable < RuboCop::Cop::Base
 
   ALWAYS_HOIST_TYPES = %i[rescue resbody ensure].freeze
   public_constant :ALWAYS_HOIST_TYPES
+
+  PRIMARY_TYPES = %i[
+    int float str sym dstr dsym xstr true false nil array hash regexp
+    lvar ivar cvar gvar const self nth_ref back_ref
+  ].freeze
+  public_constant :PRIMARY_TYPES
 
   def on_def(node)
     check(node.body)
@@ -56,8 +74,27 @@ class RuboCop::Cop::Elegant::NoRedundantVariable < RuboCop::Cop::Base
       next unless nodes.size == 1
       next unless reads[name].size == 1
       next if hoisted?(reads[name].first, nodes.first)
-      add_offense(nodes.first, message: format(MSG, name: name))
+      register(nodes.first, reads[name].first, name)
     end
+  end
+
+  def register(assign, read, name)
+    add_offense(assign, message: format(MSG, name: name)) do |corrector|
+      corrector.replace(read.source_range, inlined(assign.children.last))
+      corrector.remove(range_by_whole_lines(assign.source_range, include_final_newline: true))
+    end
+  end
+
+  def inlined(rhs)
+    return "{ #{rhs.source} }" if rhs.hash_type? && rhs.loc.begin.nil?
+    return rhs.source if primary?(rhs)
+    "(#{rhs.source})"
+  end
+
+  def primary?(node)
+    return true if PRIMARY_TYPES.include?(node.type)
+    return !node.loc.begin.nil? || node.arguments.empty? if node.send_type? || node.csend_type?
+    node.begin_type? && node.children.size == 1
   end
 
   def walk(node, assigns, reads, tainted)

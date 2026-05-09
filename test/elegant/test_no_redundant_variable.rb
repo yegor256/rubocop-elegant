@@ -76,11 +76,14 @@ class NoRedundantVariableTest < Minitest::Test
       ["def foo\n  x = a + b\n  baz(x)\nend", "def foo\n  baz((a + b))\nend"],
     'ternary_wrapped_in_parens' =>
       ["def foo\n  x = cond ? a : b\n  baz(x)\nend", "def foo\n  baz((cond ? a : b))\nend"],
-    'braceless_hash_inlines_with_braces' =>
-      ["def foo\n  x = a: 1, b: 2\n  baz(x)\nend", "def foo\n  baz({ a: 1, b: 2 })\nend"],
-    'inside_block_inlines' =>
-      ["def foo\n  arr.each do |e|\n    y = e.bar\n    baz(y)\n  end\nend",
-       "def foo\n  arr.each do |e|\n    baz(e.bar)\n  end\nend"],
+    'hash_literal_with_braces_inlines_unwrapped' =>
+      ["def foo\n  x = { a: 1 }\n  baz(x)\nend", "def foo\n  baz({ a: 1 })\nend"],
+    'method_with_receiver_no_args_inlines_unwrapped' =>
+      ["def foo\n  x = a.b\n  baz(x)\nend", "def foo\n  baz(a.b)\nend"],
+    'inside_block_inlines' => [
+      "def foo\n  arr.each do |e|\n    y = e.bar\n    baz(y)\n  end\nend",
+      "def foo\n  arr.each do |e|\n    baz(e.bar)\n  end\nend"
+    ],
     'multiple_redundant_inline_together' =>
       ["def foo\n  a = one\n  b = two\n  bar(a, b)\nend", "def foo\n  bar(one, two)\nend"],
     'class_method_inlines' =>
