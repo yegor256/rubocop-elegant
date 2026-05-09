@@ -45,11 +45,10 @@ class ClassInModuleTest < Minitest::Test
   private
 
   def offenses(source)
-    config = RuboCop::Config.new
-    cop = RuboCop::Cop::Elegant::ClassInModule.new(config)
-    commissioner = RuboCop::Cop::Commissioner.new([cop], [], raise_error: true)
-    processed = RuboCop::ProcessedSource.new(source, Float(RUBY_VERSION[/[0-9]+.[0-9]+/]))
-    result = commissioner.investigate(processed)
-    result.offenses
+    RuboCop::Cop::Commissioner.new(
+      [RuboCop::Cop::Elegant::ClassInModule.new(RuboCop::Config.new)], [], raise_error: true
+    ).investigate(
+      RuboCop::ProcessedSource.new(source, Float(RUBY_VERSION[/[0-9]+.[0-9]+/]))
+    ).offenses
   end
 end

@@ -52,14 +52,22 @@ class GoodMethodNameTest < Minitest::Test
   private
 
   def offenses(source, overrides = {})
-    path = File.expand_path('../../config/default.yml', __dir__)
-    yaml = YAML.safe_load(File.read(path))
-    settings = yaml['Elegant/GoodMethodName'].merge(overrides)
-    config = RuboCop::Config.new({ 'Elegant/GoodMethodName' => settings })
-    cop = RuboCop::Cop::Elegant::GoodMethodName.new(config)
-    commissioner = RuboCop::Cop::Commissioner.new([cop], [], raise_error: true)
-    processed = RuboCop::ProcessedSource.new(source, Float(RUBY_VERSION[/[0-9]+.[0-9]+/]))
-    result = commissioner.investigate(processed)
-    result.offenses
+    RuboCop::Cop::Commissioner.new(
+      [
+        RuboCop::Cop::Elegant::GoodMethodName.new(
+          RuboCop::Config.new(
+            {
+              'Elegant/GoodMethodName' => YAML.safe_load(
+                File.read(File.expand_path('../../config/default.yml', __dir__))
+              )['Elegant/GoodMethodName'].merge(overrides)
+            }
+          )
+        )
+      ],
+      [],
+      raise_error: true
+    ).investigate(
+      RuboCop::ProcessedSource.new(source, Float(RUBY_VERSION[/[0-9]+.[0-9]+/]))
+    ).offenses
   end
 end

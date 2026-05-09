@@ -57,14 +57,22 @@ class GoodVariableNameTest < Minitest::Test
   private
 
   def offenses(source, overrides = {})
-    path = File.expand_path('../../config/default.yml', __dir__)
-    yaml = YAML.safe_load(File.read(path))
-    settings = yaml['Elegant/GoodVariableName'].merge(overrides)
-    config = RuboCop::Config.new({ 'Elegant/GoodVariableName' => settings })
-    cop = RuboCop::Cop::Elegant::GoodVariableName.new(config)
-    commissioner = RuboCop::Cop::Commissioner.new([cop], [], raise_error: true)
-    processed = RuboCop::ProcessedSource.new(source, Float(RUBY_VERSION[/[0-9]+.[0-9]+/]))
-    result = commissioner.investigate(processed)
-    result.offenses
+    RuboCop::Cop::Commissioner.new(
+      [
+        RuboCop::Cop::Elegant::GoodVariableName.new(
+          RuboCop::Config.new(
+            {
+              'Elegant/GoodVariableName' => YAML.safe_load(
+                File.read(File.expand_path('../../config/default.yml', __dir__))
+              )['Elegant/GoodVariableName'].merge(overrides)
+            }
+          )
+        )
+      ],
+      [],
+      raise_error: true
+    ).investigate(
+      RuboCop::ProcessedSource.new(source, Float(RUBY_VERSION[/[0-9]+.[0-9]+/]))
+    ).offenses
   end
 end

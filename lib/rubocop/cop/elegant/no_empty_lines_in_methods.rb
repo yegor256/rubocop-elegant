@@ -36,8 +36,7 @@ class RuboCop::Cop::Elegant::NoEmptyLinesInMethods < RuboCop::Cop::Base
   def empty(lines)
     result = []
     lines.each do |num|
-      line = processed_source.lines[num - 1]
-      result << num if line.strip.empty?
+      result << num if processed_source.lines[num - 1].strip.empty?
     end
     result
   end

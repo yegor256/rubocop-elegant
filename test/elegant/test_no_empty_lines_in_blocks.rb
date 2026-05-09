@@ -8,165 +8,176 @@ require_relative '../test__helper'
 
 class NoEmptyLinesInBlocksTest < Minitest::Test
   def test_registers_offense_for_empty_line_in_do
-    source = "loop do\n  x = 1\n\n  x\nend"
-    offenses = offenses(source)
-    assert_equal(1, offenses.size, 'Expected offense not registered for empty line in do/end block')
+    assert_equal(
+      1, offenses("loop do\n  x = 1\n\n  x\nend").size,
+      'Expected offense not registered for empty line in do/end block'
+    )
   end
 
   def test_registers_offense_for_empty_line_in_brace
-    source = "[1].each { |x|\n  y = x\n\n  y\n}"
-    offenses = offenses(source)
-    assert_equal(1, offenses.size, 'Expected offense not registered for empty line in brace block')
+    assert_equal(
+      1, offenses("[1].each { |x|\n  y = x\n\n  y\n}").size,
+      'Expected offense not registered for empty line in brace block'
+    )
   end
 
   def test_registers_offense_for_empty_line_in_if
-    source = "if true\n  x = 1\n\n  x\nend"
-    offenses = offenses(source)
-    assert_equal(1, offenses.size, 'Expected offense not registered for empty line in if/end')
+    assert_equal(
+      1, offenses("if true\n  x = 1\n\n  x\nend").size,
+      'Expected offense not registered for empty line in if/end'
+    )
   end
 
   def test_registers_offense_for_empty_line_in_unless
-    source = "unless false\n  x = 1\n\n  x\nend"
-    offenses = offenses(source)
-    assert_equal(1, offenses.size, 'Expected offense not registered for empty line in unless/end')
+    assert_equal(
+      1, offenses("unless false\n  x = 1\n\n  x\nend").size,
+      'Expected offense not registered for empty line in unless/end'
+    )
   end
 
   def test_registers_offense_for_empty_line_in_while
-    source = "while true\n  x = 1\n\n  break\nend"
-    offenses = offenses(source)
-    assert_equal(1, offenses.size, 'Expected offense not registered for empty line in while/end')
+    assert_equal(
+      1, offenses("while true\n  x = 1\n\n  break\nend").size,
+      'Expected offense not registered for empty line in while/end'
+    )
   end
 
   def test_registers_offense_for_empty_line_in_until
-    source = "until false\n  x = 1\n\n  break\nend"
-    offenses = offenses(source)
-    assert_equal(1, offenses.size, 'Expected offense not registered for empty line in until/end')
+    assert_equal(
+      1, offenses("until false\n  x = 1\n\n  break\nend").size,
+      'Expected offense not registered for empty line in until/end'
+    )
   end
 
   def test_registers_offense_for_empty_line_in_for
-    source = "for i in [1]\n  x = i\n\n  x\nend"
-    offenses = offenses(source)
-    assert_equal(1, offenses.size, 'Expected offense not registered for empty line in for/end')
+    assert_equal(
+      1, offenses("for i in [1]\n  x = i\n\n  x\nend").size,
+      'Expected offense not registered for empty line in for/end'
+    )
   end
 
   def test_registers_offense_for_empty_line_in_case
-    source = "case 1\nwhen 1\n\n  :one\nend"
-    offenses = offenses(source)
-    assert_equal(1, offenses.size, 'Expected offense not registered for empty line in case/end')
+    assert_equal(
+      1, offenses("case 1\nwhen 1\n\n  :one\nend").size,
+      'Expected offense not registered for empty line in case/end'
+    )
   end
 
   def test_registers_offense_for_empty_line_in_case_in
-    source = "case 1\nin 1\n\n  :one\nend"
-    offenses = offenses(source)
-    assert_equal(1, offenses.size, 'Expected offense not registered for empty line in case/in pattern')
+    assert_equal(
+      1, offenses("case 1\nin 1\n\n  :one\nend").size,
+      'Expected offense not registered for empty line in case/in pattern'
+    )
   end
 
   def test_registers_offense_for_empty_line_in_begin
-    source = "begin\n  x = 1\n\n  x\nend"
-    offenses = offenses(source)
-    assert_equal(1, offenses.size, 'Expected offense not registered for empty line in begin/end')
+    assert_equal(
+      1, offenses("begin\n  x = 1\n\n  x\nend").size,
+      'Expected offense not registered for empty line in begin/end'
+    )
   end
 
   def test_registers_offense_for_empty_line_in_num
-    source = "[1].each do\n  puts _1\n\n  puts _1\nend"
-    offenses = offenses(source)
-    assert_equal(1, offenses.size, 'Expected offense not registered for empty line in numbered block')
+    assert_equal(
+      1, offenses("[1].each do\n  puts _1\n\n  puts _1\nend").size,
+      'Expected offense not registered for empty line in numbered block'
+    )
   end
 
   def test_registers_offense_for_multiple_empty_lines
-    source = "loop do\n  x = 1\n\n\n  x\nend"
-    offenses = offenses(source)
-    assert_equal(2, offenses.size, 'Expected offenses not registered for multiple empty lines in block')
+    assert_equal(
+      2, offenses("loop do\n  x = 1\n\n\n  x\nend").size,
+      'Expected offenses not registered for multiple empty lines in block'
+    )
   end
 
   def test_allows_block_without_empty_lines
-    source = "loop do\n  x = 1\n  x\nend"
-    offenses = offenses(source)
-    assert_equal(0, offenses.size, 'Block without empty lines should be allowed')
+    assert_equal(0, offenses("loop do\n  x = 1\n  x\nend").size, 'Block without empty lines should be allowed')
   end
 
   def test_allows_single_line_block
-    source = '[1].each { |x| x + 1 }'
-    offenses = offenses(source)
-    assert_equal(0, offenses.size, 'Single line block should be allowed')
+    assert_equal(0, offenses('[1].each { |x| x + 1 }').size, 'Single line block should be allowed')
   end
 
   def test_allows_empty_block
-    source = "loop do\nend"
-    offenses = offenses(source)
-    assert_equal(0, offenses.size, 'Empty block should be allowed')
+    assert_equal(0, offenses("loop do\nend").size, 'Empty block should be allowed')
   end
 
   def test_allows_top_level_empty_lines
-    source = "x = 1\n\ny = 2"
-    offenses = offenses(source)
-    assert_equal(0, offenses.size, 'Top level empty lines should not be flagged')
+    assert_equal(0, offenses("x = 1\n\ny = 2").size, 'Top level empty lines should not be flagged')
   end
 
   def test_allows_empty_lines_between_methods
-    source = "class Foo\n  def a\n    1\n  end\n\n  def b\n    2\n  end\nend"
-    offenses = offenses(source)
-    assert_equal(0, offenses.size, 'Empty line between class methods should not be flagged')
+    assert_equal(
+      0,
+      offenses("class Foo\n  def a\n    1\n  end\n\n  def b\n    2\n  end\nend").size,
+      'Empty line between class methods should not be flagged'
+    )
   end
 
   def test_allows_empty_lines_between_defs_in_do_block
-    source = "refine Foo do\n  def a\n    1\n  end\n\n  def b\n    2\n  end\nend"
-    offenses = offenses(source)
-    assert_equal(0, offenses.size, 'Empty line between sibling defs inside a do/end block should not be flagged')
+    assert_equal(
+      0,
+      offenses("refine Foo do\n  def a\n    1\n  end\n\n  def b\n    2\n  end\nend").size,
+      'Empty line between sibling defs inside a do/end block should not be flagged'
+    )
   end
 
   def test_allows_empty_lines_between_defs_in_begin
-    source = "begin\n  def a\n    1\n  end\n\n  def b\n    2\n  end\nend"
-    offenses = offenses(source)
-    assert_equal(0, offenses.size, 'Empty line between sibling defs inside a begin/end block should not be flagged')
+    assert_equal(
+      0,
+      offenses("begin\n  def a\n    1\n  end\n\n  def b\n    2\n  end\nend").size,
+      'Empty line between sibling defs inside a begin/end block should not be flagged'
+    )
   end
 
   def test_allows_empty_lines_in_nested_class
-    source = "describe do\n  class Foo\n    def a\n      1\n    end\n\n    def b\n      2\n    end\n  end\nend"
-    offenses = offenses(source)
     assert_equal(
-      0, offenses.size,
+      0,
+      offenses("describe do\n  class Foo\n    def a\n      1\n    end\n\n    def b\n      2\n    end\n  end\nend").size,
       'Empty line between sibling defs inside a class inside a block should not be flagged'
     )
   end
 
   def test_deduplicates_nested_blocks
-    source = "loop do\n  if true\n\n    x = 1\n  end\nend"
-    offenses = offenses(source)
-    assert_equal(1, offenses.size, 'Same empty line in nested blocks should be reported once')
+    assert_equal(
+      1, offenses("loop do\n  if true\n\n    x = 1\n  end\nend").size,
+      'Same empty line in nested blocks should be reported once'
+    )
   end
 
   def test_corrects_empty_line_in_block
-    source = "loop do\n  x = 1\n\n  x\nend"
-    corrected = correct(source)
-    assert_equal("loop do\n  x = 1\n  x\nend", corrected, 'Empty line in block not removed')
+    assert_equal(
+      "loop do\n  x = 1\n  x\nend",
+      correct("loop do\n  x = 1\n\n  x\nend"),
+      'Empty line in block not removed'
+    )
   end
 
   def test_corrects_multiple_empty_lines
-    source = "loop do\n  x = 1\n\n\n  x\nend"
-    corrected = correct(source)
-    assert_equal("loop do\n  x = 1\n  x\nend", corrected, 'Multiple empty lines in block not removed')
+    assert_equal(
+      "loop do\n  x = 1\n  x\nend",
+      correct("loop do\n  x = 1\n\n\n  x\nend"),
+      'Multiple empty lines in block not removed'
+    )
   end
 
   private
 
   def offenses(source)
-    config = RuboCop::Config.new
-    cop = RuboCop::Cop::Elegant::NoEmptyLinesInBlocks.new(config)
-    commissioner = RuboCop::Cop::Commissioner.new([cop], [], raise_error: true)
-    processed = RuboCop::ProcessedSource.new(source, Float(RUBY_VERSION[/[0-9]+.[0-9]+/]))
-    result = commissioner.investigate(processed)
-    result.offenses
+    RuboCop::Cop::Commissioner.new(
+      [RuboCop::Cop::Elegant::NoEmptyLinesInBlocks.new(RuboCop::Config.new)], [], raise_error: true
+    ).investigate(
+      RuboCop::ProcessedSource.new(source, Float(RUBY_VERSION[/[0-9]+.[0-9]+/]))
+    ).offenses
   end
 
   def correct(source)
-    config = RuboCop::Config.new
-    cop = RuboCop::Cop::Elegant::NoEmptyLinesInBlocks.new(config, autocorrect: true)
     processed = RuboCop::ProcessedSource.new(source, Float(RUBY_VERSION[/[0-9]+.[0-9]+/]))
-    commissioner = RuboCop::Cop::Commissioner.new([cop], [], raise_error: true)
-    result = commissioner.investigate(processed)
     corrector = RuboCop::Cop::Corrector.new(processed.buffer)
-    result.correctors.compact.each { |c| corrector.merge!(c) }
+    RuboCop::Cop::Commissioner.new(
+      [RuboCop::Cop::Elegant::NoEmptyLinesInBlocks.new(RuboCop::Config.new, autocorrect: true)], [], raise_error: true
+    ).investigate(processed).correctors.compact.each { |c| corrector.merge!(c) }
     corrector.rewrite
   end
 end

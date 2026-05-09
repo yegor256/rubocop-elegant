@@ -8,72 +8,70 @@ require_relative '../test__helper'
 
 class NoEmptyLinesInMethodsTest < Minitest::Test
   def test_registers_offense_for_empty_line_in_method
-    source = "def foo\n  x = 1\n\n  x\nend"
-    offenses = offenses(source)
-    assert_equal(1, offenses.size, 'Expected offense not registered for empty line in method')
+    assert_equal(
+      1, offenses("def foo\n  x = 1\n\n  x\nend").size,
+      'Expected offense not registered for empty line in method'
+    )
   end
 
   def test_registers_offense_for_multiple_empty_lines
-    source = "def foo\n  x = 1\n\n\n  x\nend"
-    offenses = offenses(source)
-    assert_equal(2, offenses.size, 'Expected offenses not registered for multiple empty lines')
+    assert_equal(
+      2, offenses("def foo\n  x = 1\n\n\n  x\nend").size,
+      'Expected offenses not registered for multiple empty lines'
+    )
   end
 
   def test_allows_method_without_empty_lines
-    source = "def foo\n  x = 1\n  x\nend"
-    offenses = offenses(source)
-    assert_equal(0, offenses.size, 'Method without empty lines should be allowed')
+    assert_equal(0, offenses("def foo\n  x = 1\n  x\nend").size, 'Method without empty lines should be allowed')
   end
 
   def test_allows_single_line_method
-    source = 'def foo; 42; end'
-    offenses = offenses(source)
-    assert_equal(0, offenses.size, 'Single line method should be allowed')
+    assert_equal(0, offenses('def foo; 42; end').size, 'Single line method should be allowed')
   end
 
   def test_allows_empty_method
-    source = "def foo\nend"
-    offenses = offenses(source)
-    assert_equal(0, offenses.size, 'Empty method should be allowed')
+    assert_equal(0, offenses("def foo\nend").size, 'Empty method should be allowed')
   end
 
   def test_registers_offense_in_class_method
-    source = "def self.foo\n  x = 1\n\n  x\nend"
-    offenses = offenses(source)
-    assert_equal(1, offenses.size, 'Expected offense not registered for class method')
+    assert_equal(
+      1, offenses("def self.foo\n  x = 1\n\n  x\nend").size,
+      'Expected offense not registered for class method'
+    )
   end
 
   def test_corrects_empty_line
-    source = "def foo\n  x = 1\n\n  x\nend"
-    corrected = correct(source)
-    assert_equal("def foo\n  x = 1\n  x\nend", corrected, 'Empty line not removed')
+    assert_equal(
+      "def foo\n  x = 1\n  x\nend",
+      correct("def foo\n  x = 1\n\n  x\nend"),
+      'Empty line not removed'
+    )
   end
 
   def test_corrects_multiple_empty_lines
-    source = "def foo\n  x = 1\n\n\n  x\nend"
-    corrected = correct(source)
-    assert_equal("def foo\n  x = 1\n  x\nend", corrected, 'Multiple empty lines not removed')
+    assert_equal(
+      "def foo\n  x = 1\n  x\nend",
+      correct("def foo\n  x = 1\n\n\n  x\nend"),
+      'Multiple empty lines not removed'
+    )
   end
 
   private
 
   def offenses(source)
-    config = RuboCop::Config.new
-    cop = RuboCop::Cop::Elegant::NoEmptyLinesInMethods.new(config)
-    commissioner = RuboCop::Cop::Commissioner.new([cop], [], raise_error: true)
-    processed = RuboCop::ProcessedSource.new(source, Float(RUBY_VERSION[/[0-9]+.[0-9]+/]))
-    result = commissioner.investigate(processed)
-    result.offenses
+    RuboCop::Cop::Commissioner.new(
+      [RuboCop::Cop::Elegant::NoEmptyLinesInMethods.new(RuboCop::Config.new)], [], raise_error: true
+    ).investigate(
+      RuboCop::ProcessedSource.new(source, Float(RUBY_VERSION[/[0-9]+.[0-9]+/]))
+    ).offenses
   end
 
   def correct(source)
-    config = RuboCop::Config.new
-    cop = RuboCop::Cop::Elegant::NoEmptyLinesInMethods.new(config, autocorrect: true)
     processed = RuboCop::ProcessedSource.new(source, Float(RUBY_VERSION[/[0-9]+.[0-9]+/]))
-    commissioner = RuboCop::Cop::Commissioner.new([cop], [], raise_error: true)
-    result = commissioner.investigate(processed)
     corrector = RuboCop::Cop::Corrector.new(processed.buffer)
-    result.correctors.compact.each { |c| corrector.merge!(c) }
+    RuboCop::Cop::Commissioner.new(
+      [RuboCop::Cop::Elegant::NoEmptyLinesInMethods.new(RuboCop::Config.new, autocorrect: true)], [], raise_error: true
+    ).investigate(processed).correctors.compact.each { |c| corrector.merge!(c) }
     corrector.rewrite
   end
 end

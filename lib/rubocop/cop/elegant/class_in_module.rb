@@ -21,8 +21,7 @@ class RuboCop::Cop::Elegant::ClassInModule < RuboCop::Cop::Base
   private
 
   def namespaced?(node)
-    const = node.children[0]
-    scope = const.children[0]
+    scope = node.children[0].children[0]
     !scope.nil? && scope.type != :cbase
   end
 

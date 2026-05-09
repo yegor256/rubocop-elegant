@@ -21,6 +21,10 @@ Elegant/NoNilReturn:
   Description: 'Forbids a method or function from returning nil on any code path'
   Enabled: true
   VersionAdded: '0.1.0'
+Elegant/NoRedundantVariable:
+  Description: 'Forbids local variables that are assigned once and read once; such variables must be inlined'
+  Enabled: true
+  VersionAdded: '0.3.0'
 Elegant/PairedBrackets:
   Description: 'Enforces the paired brackets notation: a bracket must pair on the same line, or start/end its line'
   Enabled: true
