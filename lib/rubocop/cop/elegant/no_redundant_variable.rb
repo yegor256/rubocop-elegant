@@ -79,22 +79,45 @@ class RuboCop::Cop::Elegant::NoRedundantVariable < RuboCop::Cop::Base
   end
 
   def register(assign, read, name)
+    return add_offense(assign, message: format(MSG, name: name)) unless solo?(assign)
     add_offense(assign, message: format(MSG, name: name)) do |corrector|
-      corrector.replace(read.source_range, inlined(assign.children.last))
+      corrector.replace(read.source_range, inlined(assign.children.last, read))
       corrector.remove(range_by_whole_lines(assign.source_range, include_final_newline: true))
     end
   end
 
-  def inlined(rhs)
+  def solo?(assign)
+    range = assign.source_range
+    return false unless range.first_line == range.last_line
+    range.source_buffer.source_line(range.first_line).strip == range.source.strip
+  end
+
+  def inlined(rhs, read)
+    return "(#{braced(rhs)})" if wrap?(rhs, read)
+    braced(rhs)
+  end
+
+  def braced(rhs)
     return "{ #{rhs.source} }" if rhs.hash_type? && rhs.loc.begin.nil?
-    return rhs.source if primary?(rhs)
-    "(#{rhs.source})"
+    rhs.source
+  end
+
+  def wrap?(rhs, read)
+    return true unless primary?(rhs)
+    rhs.hash_type? && bare?(read)
   end
 
   def primary?(node)
     return true if PRIMARY_TYPES.include?(node.type)
     return !node.loc.begin.nil? || node.arguments.empty? if node.send_type? || node.csend_type?
     node.begin_type? && node.children.size == 1
+  end
+
+  def bare?(read)
+    parent = read.parent
+    return false if parent.nil?
+    return false unless parent.send_type? || parent.csend_type?
+    parent.loc.begin.nil? && parent.arguments.include?(read)
   end
 
   def walk(node, assigns, reads, tainted)

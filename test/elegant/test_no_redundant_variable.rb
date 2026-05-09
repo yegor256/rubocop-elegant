@@ -87,7 +87,11 @@ class NoRedundantVariableTest < Minitest::Test
     'multiple_redundant_inline_together' =>
       ["def foo\n  a = one\n  b = two\n  bar(a, b)\nend", "def foo\n  bar(one, two)\nend"],
     'class_method_inlines' =>
-      ["def self.foo\n  x = bar\n  baz(x)\nend", "def self.foo\n  baz(bar)\nend"]
+      ["def self.foo\n  x = bar\n  baz(x)\nend", "def self.foo\n  baz(bar)\nend"],
+    'shared_line_assignment_is_left_alone' =>
+      ["def foo\n  x = bar; baz(x)\nend", "def foo\n  x = bar; baz(x)\nend"],
+    'hash_into_bare_send_arg_is_wrapped' =>
+      ["def foo\n  x = { a: 1 }\n  baz x\nend", "def foo\n  baz ({ a: 1 })\nend"]
   }.freeze
   public_constant :AUTOCORRECTIONS
 
