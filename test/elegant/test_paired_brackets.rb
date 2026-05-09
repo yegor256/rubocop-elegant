@@ -39,6 +39,17 @@ class PairedBracketsTest < Minitest::Test
   }.freeze
   public_constant :VIOLATIONS
 
+  AUTOCORRECTIONS = {
+    'closer_not_at_start_of_line' => ["foo(\n  1)", "foo(\n  1\n)"],
+    'opener_not_at_end_of_line' => ["foo(1,\n  2\n)", "foo(\n  1,\n  2\n)"],
+    'split_square_brackets_in_middle' => ["[1,\n 2]", "[\n  1,\n 2\n]"],
+    'closer_in_middle_when_chained' => ["foo(\n  1).bar", "foo(\n  1\n).bar"],
+    'opener_in_middle_of_line' => ["foo(bar(\n  1\n))", "foo(\n  bar(\n  1\n)\n)"],
+    'opener_with_indent' => ["  foo(1,\n    2\n  )", "  foo(\n    1,\n    2\n  )"],
+    'closer_with_indent' => ["  foo(\n    1)", "  foo(\n    1\n  )"]
+  }.freeze
+  public_constant :AUTOCORRECTIONS
+
   ALLOWED.each do |name, source|
     define_method("test_allows_#{name}") do
       total = offenses(source).size
@@ -53,6 +64,13 @@ class PairedBracketsTest < Minitest::Test
     end
   end
 
+  AUTOCORRECTIONS.each do |name, (source, expected)|
+    define_method("test_auto_corrects_#{name}") do
+      fixed = autocorrect(source)
+      assert_equal(expected, fixed, "Expected auto-correct on #{name.tr('_', ' ')} to produce #{expected.inspect}, got #{fixed.inspect}")
+    end
+  end
+
   private
 
   def offenses(source)
@@ -61,5 +79,14 @@ class PairedBracketsTest < Minitest::Test
     ).investigate(
       RuboCop::ProcessedSource.new(source, Float(RUBY_VERSION[/[0-9]+.[0-9]+/]))
     ).offenses
+  end
+
+  def autocorrect(source)
+    processed = RuboCop::ProcessedSource.new(source, Float(RUBY_VERSION[/[0-9]+.[0-9]+/]))
+    cop = RuboCop::Cop::Elegant::PairedBrackets.new(RuboCop::Config.new)
+    found = RuboCop::Cop::Commissioner.new([cop], [], raise_error: true).investigate(processed).offenses
+    corrector = RuboCop::Cop::Corrector.new(processed)
+    found.each { |o| corrector.merge!(o.corrector) unless o.corrector.nil? }
+    corrector.process
   end
 end
