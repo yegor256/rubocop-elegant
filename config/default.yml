@@ -43,6 +43,13 @@ Elegant/NoClassInModule:
   Exclude:
     - '**/*Test.rb'
     - '**/test_*.rb'
+Elegant/OneClassPerFile:
+  Description: 'Allows only one non-empty top-level class per file; empty forward declarations are treated as namespace scaffolding'
+  Enabled: true
+  VersionAdded: '0.4.0'
+  Exclude:
+    - '**/*Test.rb'
+    - '**/test_*.rb'
 Elegant/IndentationLadder:
   Description: 'Requires the indentation step to be exactly two spaces when a line indents to the right of the previous one'
   Enabled: true
@@ -101,6 +108,10 @@ Layout/LineLength:
 Style/MultilineBlockChain:
   Enabled: false
 Style/ClassAndModuleChildren:
+  Enabled: false
+Style/OneClassPerFile:
+  Enabled: false
+Lint/EmptyClass:
   Enabled: false
 Lint/NestedMethodDefinition:
   Enabled: false

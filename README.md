@@ -22,6 +22,7 @@ The custom cops add the following restrictions:
 
 * Classes must live inside a module; top-level classes are forbidden.
 * A class nested in a module must use compact namespace syntax.
+* Only one non-empty top-level class per file; empty forward declarations are allowed.
 * Method names must be single lowercase verbs.
 * Variable names must be single lowercase nouns.
 * Each indentation step must add exactly two spaces.
