@@ -1,4 +1,5 @@
 --source=.
+--exclude=lib/rubocop/cop/elegant/no_comments.rb
 --exclude=test/elegant/test_no_comments.rb
 --verbose
 --rule min-words:20
