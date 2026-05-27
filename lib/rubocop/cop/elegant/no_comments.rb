@@ -6,7 +6,7 @@
 class RuboCop::Cop::Elegant::NoComments < RuboCop::Cop::Base
   extend RuboCop::Cop::AutoCorrector
 
-  MSG = 'Comment is not allowed, unless it is SPDX, magic, rubocop directive, or docblock'
+  MSG = 'Comment is not allowed, unless it is SPDX, magic, rubocop directive, PDD puzzle, or docblock'
   public_constant :MSG
 
   def on_new_investigation
@@ -18,7 +18,11 @@ class RuboCop::Cop::Elegant::NoComments < RuboCop::Cop::Base
   private
 
   def allowed?(comment)
-    spdx?(comment) || magic?(comment) || rubocop?(comment) || (gemspec? && docblock?(comment))
+    spdx?(comment) || magic?(comment) || rubocop?(comment) || puzzle?(comment) || (gemspec? && docblock?(comment))
+  end
+
+  def puzzle?(comment)
+    comment.text.match?(/@todo\b/i)
   end
 
   def spdx?(comment)

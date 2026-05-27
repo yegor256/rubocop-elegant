@@ -86,6 +86,35 @@ class NoCommentsTest < Minitest::Test
     assert_equal(0, offenses("# rubocop:todo Style/Foo\ndef foo; end").size, 'rubocop:todo comment should be allowed')
   end
 
+  def test_allows_pdd_puzzle
+    assert_equal(
+      0, offenses("# @todo #123 handle timeouts\nx = 1\ndef foo; end").size,
+      'PDD @todo puzzle should be allowed'
+    )
+  end
+
+  def test_allows_pdd_puzzle_inside_method_body
+    assert_equal(
+      0, offenses("def bar(uri)\n  # @todo #3:1h Puzzle inside a method body.\n  get(uri)\nend").size,
+      'PDD @todo puzzle inside a method body should be allowed'
+    )
+  end
+
+  def test_allows_pdd_puzzle_case_insensitive
+    assert_equal(
+      0, offenses("# @ToDo #1:30min Puzzle.\nx = 1").size,
+      'PDD @todo puzzle should be allowed regardless of case'
+    )
+  end
+
+  def test_corrects_preserves_pdd_puzzle
+    assert_equal(
+      "# @todo #1 do it\ndef foo; end",
+      correct("# @todo #1 do it\n# bad comment\ndef foo; end"),
+      'PDD puzzle was removed'
+    )
+  end
+
   def test_corrects_preserves_magic_comment
     assert_equal(
       "# frozen_string_literal: true\ndef foo; end",
