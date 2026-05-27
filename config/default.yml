@@ -6,7 +6,7 @@ Elegant:
   Enabled: true
   DocumentationBaseURL: https://github.com/yegor256/rubocop-elegant
 Elegant/NoComments:
-  Description: 'Disallows comments in source code, except SPDX license comments'
+  Description: 'Disallows comments in source code, except SPDX, magic, rubocop directives, PDD puzzles, and docblocks'
   Enabled: true
   VersionAdded: '0.0.1'
 Elegant/NoEmptyLinesInMethods:

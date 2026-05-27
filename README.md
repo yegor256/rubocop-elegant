@@ -26,7 +26,7 @@ The custom cops add the following restrictions:
 * Method names must be single lowercase verbs.
 * Variable names must be single lowercase nouns.
 * Each indentation step must add exactly two spaces.
-* Comments are forbidden, except SPDX, magic, RuboCop directives, and class docblocks.
+* Comments are forbidden, except SPDX, magic, RuboCop, PDD puzzles, docblocks.
 * Empty lines inside block bodies are forbidden.
 * Empty lines inside method bodies are forbidden.
 * A method cannot return `nil` explicitly.
