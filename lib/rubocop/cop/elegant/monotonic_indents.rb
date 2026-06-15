@@ -3,7 +3,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2019-2026 Yegor Bugayenko
 # SPDX-License-Identifier: MIT
 
-# Enforces the "indentation ladder" rule: when a line is indented further
+# Enforces the "monotonic indentation" rule: when a line is indented further
 # to the right than the previous non-empty line, the extra indentation
 # must be exactly two spaces. Larger jumps (or odd ones, such as a single
 # space or three spaces) break the visual rhythm of the code and make
@@ -11,7 +11,7 @@
 # de-indent by any amount, are not affected. Lines that belong to the
 # body of a heredoc are ignored, because their whitespace is part of the
 # literal value rather than program structure.
-class RuboCop::Cop::Elegant::IndentationLadder < RuboCop::Cop::Base
+class RuboCop::Cop::Elegant::MonotonicIndents < RuboCop::Cop::Base
   MSG = 'Indentation step of %<step>d spaces is not allowed; use 2 spaces'
   public_constant :MSG
 

@@ -6,7 +6,7 @@
 require_relative '../../lib/rubocop-elegant'
 require_relative '../test__helper'
 
-class IndentationLadderTest < Minitest::Test
+class MonotonicIndentsTest < Minitest::Test
   ALLOWED = {
     'single_line_source' => 'x = 1',
     'two_lines_at_same_indent' => "a = 1\nb = 2",
@@ -48,7 +48,7 @@ class IndentationLadderTest < Minitest::Test
 
   def offenses(source)
     RuboCop::Cop::Commissioner.new(
-      [RuboCop::Cop::Elegant::IndentationLadder.new(RuboCop::Config.new)], [], raise_error: true
+      [RuboCop::Cop::Elegant::MonotonicIndents.new(RuboCop::Config.new)], [], raise_error: true
     ).investigate(
       RuboCop::ProcessedSource.new(source, Float(RUBY_VERSION[/[0-9]+.[0-9]+/]))
     ).offenses

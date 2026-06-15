@@ -50,7 +50,7 @@ Elegant/OneClassPerFile:
   Exclude:
     - '**/*Test.rb'
     - '**/test_*.rb'
-Elegant/IndentationLadder:
+Elegant/MonotonicIndents:
   Description: 'Requires the indentation step to be exactly two spaces when a line indents to the right of the previous one'
   Enabled: true
   VersionAdded: '0.1.0'
