@@ -43,7 +43,6 @@ Then, format your `.rubocop.yml` like this:
 
 ```yaml
 AllCops:
-  EnabledByDefault: true
   NewCops: enable
 plugins:
   - rubocop-minitest
