@@ -26,7 +26,13 @@ class NoNilReturnTest < Minitest::Test
     'modifier_if' => 'def foo; bar if x; end',
     'case_without_else' => 'def foo; case x; when 1; 2; end; end',
     'if_branch_contains_nil' => 'def foo; if x; nil; else; 2; end; end',
-    'case_else_is_nil' => 'def foo; case x; when 1; 2; else; nil; end; end'
+    'case_else_is_nil' => 'def foo; case x; when 1; 2; else; nil; end; end',
+    'block_non_nil_tail' => 'foo { 42 }',
+    'lambda_non_nil_tail' => '-> { 42 }',
+    'proc_non_nil_tail' => 'proc { 42 }',
+    'block_bare_return' => 'foo { return if x }',
+    'numblock_non_nil_tail' => 'foo { _1 }',
+    'empty_block_body' => 'foo {}'
   }.freeze
   public_constant :ALLOWED
 
@@ -40,7 +46,13 @@ class NoNilReturnTest < Minitest::Test
       ["def foo\n  return nil if x\n  return nil if y\n  bar\nend", 2],
     'return_nil_alongside_nil_tail' =>
       ["def foo\n  return nil if x\n  nil\nend", 2],
-    'kwbegin_nil_tail' => ["def foo\n  begin\n    bar\n    nil\n  end\nend", 1]
+    'kwbegin_nil_tail' => ["def foo\n  begin\n    bar\n    nil\n  end\nend", 1],
+    'block_nil_tail' => ['foo { nil }', 1],
+    'lambda_nil_tail' => ['-> { nil }', 1],
+    'proc_return_nil' => ['proc { return nil }', 1],
+    'block_return_nil_if' => ['foo { return nil if x }', 1],
+    'block_multi_statement_nil_tail' => ["foo do\n  bar\n  nil\nend", 1],
+    'numblock_nil_tail' => ["foo do\n  _1\n  nil\nend", 1]
   }.freeze
   public_constant :VIOLATIONS
 
@@ -61,6 +73,11 @@ class NoNilReturnTest < Minitest::Test
   def test_attributes_offense_only_to_inner_nested_def
     total = offenses("def foo\n  def bar\n    return nil\n  end\n  42\nend").size
     assert_equal(1, total, "Inner def with return nil should produce exactly 1 offense, got #{total}")
+  end
+
+  def test_attributes_offense_only_to_block
+    total = offenses("def foo\n  bar { return nil }\n  42\nend").size
+    assert_equal(1, total, "return nil inside a block should produce exactly 1 offense, got #{total}")
   end
 
   private
