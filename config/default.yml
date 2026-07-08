@@ -103,6 +103,8 @@ Layout/EndOfLine:
   EnforcedStyle: lf
 Layout/ParameterAlignment:
   Enabled: false
+Layout/ArrayAlignment:
+  EnforcedStyle: with_fixed_indentation
 Layout/LineLength:
   Max: 120
 Style/MultilineBlockChain:
