@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new('>= 0') if s.respond_to?(:required_rubygems_version=)
   s.required_ruby_version = '>=2.2'
   s.name = 'rubocop-elegant'
-  s.version = '0.0.0'
+  s.version = '0.7.1'
   s.license = 'MIT'
   s.summary = 'Set of custom RuboCop cops for elegant Ruby coding'
   s.description =
