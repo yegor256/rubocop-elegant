@@ -15,7 +15,19 @@ class GoodMethodNameTest < Minitest::Test
     ['def test_something_works; end', 'test_ prefix'],
     ['def fake_response; end', 'fake_ prefix'],
     ['def the_answer; end', 'the_ prefix'],
-    ['def self.foo; end', 'class method']
+    ['def self.foo; end', 'class method'],
+    ['def ==(other); end', 'equality operator'],
+    ['def <=>(other); end', 'spaceship operator'],
+    ['def +(other); end', 'plus operator'],
+    ['def -(other); end', 'minus operator'],
+    ['def *(other); end', 'multiply operator'],
+    ['def /(other); end', 'divide operator'],
+    ['def <(other); end', 'less than operator'],
+    ['def >(other); end', 'greater than operator'],
+    ['def <=(other); end', 'less than or equal operator'],
+    ['def [](index); end', 'index operator'],
+    ['def []=(index, value); end', 'index assignment operator'],
+    ['def self.==(other); end', 'class equality operator']
   ].each do |source, description|
     define_method("test_allows_#{description.gsub(/\s+/, '_')}") do
       assert_equal(0, offenses(source).size, "#{description} should be allowed")

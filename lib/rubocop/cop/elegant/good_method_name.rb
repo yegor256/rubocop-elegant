@@ -18,9 +18,14 @@ class RuboCop::Cop::Elegant::GoodMethodName < RuboCop::Cop::Base
   private
 
   def check(node, name)
+    return unless identifier?(name)
     return if allowed?(name)
     return if match?(name)
     add_offense(node, message: format(MSG, name: name))
+  end
+
+  def identifier?(name)
+    /\A[a-zA-Z_]/.match?(name)
   end
 
   def match?(name)
