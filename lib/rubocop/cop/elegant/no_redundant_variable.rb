@@ -20,14 +20,31 @@
 # is reassigned, read more than once, or never read is left alone
 # too.
 #
+# Inlining moves the right-hand side down to the read, so whatever
+# ran in between would run before it instead. The variable is
+# therefore left alone unless that gap is side-effect free. The gap
+# spans the statements between the assignment and the read, and also
+# the operands that precede the read inside its own statement.
+# Side-effect free means literals, reads of local variables, +self+,
+# arrays, hashes, pairs and parenthesized groups of those. Everything
+# else is assumed to be observable: method calls, +yield+, blocks,
+# and reads of instance, class and global variables, constants and
+# back-references, which the right-hand side may itself write.
+# Another assignment that this cop inlines too is stepped over when
+# its own read comes later and its own gap is clean, since both
+# right-hand sides then keep their relative order.
+#
 # Auto-correct inlines the redundant assignment: it replaces the
 # single +lvar+ read with the source of the assignment's right-hand
 # side, then removes the whole assignment line including its leading
-# indent and trailing newline. The right-hand side is wrapped in
-# parentheses unless it is already a primary expression (literal,
-# variable, parenthesized expression, or method call with parentheses
-# or no arguments), so that operator precedence at the read site is
-# preserved.
+# indent and trailing newline. An assignment that shares its line
+# with other code, or whose own source contains the read of another
+# redundant variable, is reported but not corrected, since removing
+# its line would clobber the other rewrite; a later pass picks it up.
+# The right-hand side is wrapped in parentheses unless it is already
+# a primary expression (literal, variable, parenthesized expression,
+# or method call with parentheses or no arguments), so that operator
+# precedence at the read site is preserved.
 class RuboCop::Cop::Elegant::NoRedundantVariable < RuboCop::Cop::Base
   extend RuboCop::Cop::AutoCorrector
   include RuboCop::Cop::RangeHelp
@@ -53,6 +70,12 @@ class RuboCop::Cop::Elegant::NoRedundantVariable < RuboCop::Cop::Base
   ].freeze
   public_constant :PRIMARY_TYPES
 
+  PURE_TYPES = %i[
+    int float rational complex str sym true false nil array hash regexp regopt
+    irange erange lvar self pair begin
+  ].freeze
+  public_constant :PURE_TYPES
+
   def on_def(node)
     check(node.body)
   end
@@ -69,17 +92,40 @@ class RuboCop::Cop::Elegant::NoRedundantVariable < RuboCop::Cop::Base
     reads = Hash.new { |h, k| h[k] = [] }
     tainted = []
     walk(body, assigns, reads, tainted)
+    inline(singles(assigns, reads, tainted))
+  end
+
+  def singles(assigns, reads, tainted)
+    found = {}
     assigns.each do |name, nodes|
       next if tainted.include?(name)
       next unless nodes.size == 1
       next unless reads[name].size == 1
       next if hoisted?(reads[name].first, nodes.first)
-      register(nodes.first, reads[name].first, name)
+      found[nodes.first] = reads[name].first
+    end
+    found
+  end
+
+  def inline(singles)
+    movable = singles.select { |assign, _| solo?(assign) && !swallows?(assign, singles) }
+    crossings = {}
+    singles.each do |assign, read|
+      next if crossed?(read, assign, movable, crossings)
+      register(assign, read, movable.key?(assign))
     end
   end
 
-  def register(assign, read, name)
-    return add_offense(assign, message: format(MSG, name: name)) unless solo?(assign)
+  def swallows?(assign, singles)
+    range = assign.source_range
+    singles.any? do |_, read|
+      read.source_range.begin_pos > range.begin_pos && read.source_range.end_pos <= range.end_pos
+    end
+  end
+
+  def register(assign, read, correctable)
+    name = assign.children.first
+    return add_offense(assign, message: format(MSG, name: name)) unless correctable
     add_offense(assign, message: format(MSG, name: name)) do |corrector|
       corrector.replace(read.source_range, inlined(assign.children.last, read))
       corrector.remove(range_by_whole_lines(assign.source_range, include_final_newline: true))
@@ -164,5 +210,46 @@ class RuboCop::Cop::Elegant::NoRedundantVariable < RuboCop::Cop::Base
       parent = parent.parent
     end
     parent.nil?
+  end
+
+  def crossed?(read, assign, movable, crossings)
+    return crossings[assign] if crossings.key?(assign)
+    crossings[assign] = scan?(read, assign, movable, crossings)
+  end
+
+  def scan?(read, assign, movable, crossings)
+    child = read
+    parent = read.parent
+    until parent.nil?
+      return true unless before(parent, child, assign).all? do |node|
+        deferred?(node, read, movable, crossings)
+      end
+      return false if parent.equal?(assign.parent)
+      child = parent
+      parent = parent.parent
+    end
+    false
+  end
+
+  def before(parent, child, assign)
+    kids = parent.children
+    stop = kids.index { |node| node.equal?(child) }
+    return [] if stop.nil?
+    return kids[0...stop] unless parent.equal?(assign.parent)
+    kids[(kids.index { |node| node.equal?(assign) } + 1)...stop]
+  end
+
+  def deferred?(node, read, movable, crossings)
+    return true if pure?(node)
+    twin = movable[node]
+    return false if twin.nil?
+    return false if twin.source_range.begin_pos < read.source_range.begin_pos
+    !crossed?(twin, node, movable, crossings)
+  end
+
+  def pure?(node)
+    return true unless node.is_a?(RuboCop::AST::Node)
+    return false unless PURE_TYPES.include?(node.type)
+    node.each_child_node.all? { |kid| pure?(kid) }
   end
 end
