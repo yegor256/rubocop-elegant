@@ -46,7 +46,11 @@ class PairedBracketsTest < Minitest::Test
     'closer_in_middle_when_chained' => ["foo(\n  1).bar", "foo(\n  1\n).bar"],
     'opener_in_middle_of_line' => ["foo(bar(\n  1\n))", "foo(\n  bar(\n  1\n)\n)"],
     'opener_with_indent' => ["  foo(1,\n    2\n  )", "  foo(\n    1,\n    2\n  )"],
-    'closer_with_indent' => ["  foo(\n    1)", "  foo(\n    1\n  )"]
+    'closer_with_indent' => ["  foo(\n    1)", "  foo(\n    1\n  )"],
+    'space_after_opener_is_consumed' => ["  { a: 1,\n    b: 2 }", "  {\n    a: 1,\n    b: 2\n  }"],
+    'tabs_around_brackets_are_consumed' => ["  foo(\t1,\n    2\t)", "  foo(\n    1,\n    2\n  )"],
+    'multibyte_text_does_not_shift_the_offsets' =>
+      ["# \u20ac\nfoo( 1,\n  2 )", "# \u20ac\nfoo(\n  1,\n  2\n)"]
   }.freeze
   public_constant :AUTOCORRECTIONS
 
