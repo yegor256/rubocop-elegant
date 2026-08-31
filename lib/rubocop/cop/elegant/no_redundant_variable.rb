@@ -23,7 +23,10 @@
 # Auto-correct inlines the redundant assignment: it replaces the
 # single +lvar+ read with the source of the assignment's right-hand
 # side, then removes the whole assignment line including its leading
-# indent and trailing newline. The right-hand side is wrapped in
+# indent and trailing newline. When the read is the value of a Ruby
+# 3.1 shorthand pair, such as the +ids+ of +call(ids:)+, key and
+# value share one range, so the whole pair is rewritten into its
+# long form +ids: <rhs>+ instead. The right-hand side is wrapped in
 # parentheses unless it is already a primary expression (literal,
 # variable, parenthesized expression, or method call with parentheses
 # or no arguments), so that operator precedence at the read site is
@@ -81,9 +84,24 @@ class RuboCop::Cop::Elegant::NoRedundantVariable < RuboCop::Cop::Base
   def register(assign, read, name)
     return add_offense(assign, message: format(MSG, name: name)) unless solo?(assign)
     add_offense(assign, message: format(MSG, name: name)) do |corrector|
-      corrector.replace(read.source_range, inlined(assign.children.last, read))
+      corrector.replace(*rewrite(assign.children.last, read))
       corrector.remove(range_by_whole_lines(assign.source_range, include_final_newline: true))
     end
+  end
+
+  def rewrite(rhs, read)
+    pair = shorthand(read)
+    return [read.source_range, inlined(rhs, read)] if pair.nil?
+    [pair.source_range, "#{pair.children.first.source}: #{inlined(rhs, read)}"]
+  end
+
+  def shorthand(read)
+    parent = read.parent
+    return if parent.nil? || !parent.pair_type?
+    key, value = parent.children
+    return unless value.equal?(read)
+    return unless key.source_range == value.source_range
+    parent
   end
 
   def solo?(assign)
