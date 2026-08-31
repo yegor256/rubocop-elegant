@@ -32,6 +32,7 @@ The custom cops add the following restrictions:
 * A method cannot return `nil` explicitly.
 * Local variables that are assigned once and read once must be inlined.
 * Brackets must be paired on the same line, or start/end their own line.
+* The SPDX header must sit above the code, with only comments before it.
 
 First, install it:
 

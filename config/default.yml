@@ -78,6 +78,10 @@ Elegant/GoodMethodName:
   VersionAdded: '0.0.3'
   Pattern: '^(?=.{1,48}$)(((to|fake|the|with|without)_)?[a-z]{1,16}[!?]?|(on|test)_[a-z_]+)$'
   AllowedNames: []
+Elegant/SpdxOnTop:
+  Description: 'Requires the SPDX header to sit above the code, with only comments and blank lines before it'
+  Enabled: true
+  VersionAdded: '0.8.0'
 
 Style/RedundantException:
   Enabled: false
