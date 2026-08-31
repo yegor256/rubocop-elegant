@@ -36,6 +36,10 @@ Elegant/ClassInModule:
   Exclude:
     - '**/*Test.rb'
     - '**/test_*.rb'
+    - '**/*_test.rb'
+    - '**/*_spec.rb'
+    - 'test/**/*'
+    - 'spec/**/*'
 Elegant/NoClassInModule:
   Description: 'Forbids declaring a class inside a module declaration; use compact namespace syntax instead'
   Enabled: true
@@ -43,6 +47,10 @@ Elegant/NoClassInModule:
   Exclude:
     - '**/*Test.rb'
     - '**/test_*.rb'
+    - '**/*_test.rb'
+    - '**/*_spec.rb'
+    - 'test/**/*'
+    - 'spec/**/*'
 Elegant/OneClassPerFile:
   Description: 'Allows only one non-empty top-level class per file; empty forward declarations are treated as namespace scaffolding'
   Enabled: true
@@ -50,6 +58,10 @@ Elegant/OneClassPerFile:
   Exclude:
     - '**/*Test.rb'
     - '**/test_*.rb'
+    - '**/*_test.rb'
+    - '**/*_spec.rb'
+    - 'test/**/*'
+    - 'spec/**/*'
 Elegant/MonotonicIndents:
   Description: 'Requires the indentation step to be exactly two spaces when a line indents to the right of the previous one'
   Enabled: true
@@ -78,11 +90,19 @@ Metrics/ModuleLength:
   Exclude:
     - '**/*Test.rb'
     - '**/test_*.rb'
+    - '**/*_test.rb'
+    - '**/*_spec.rb'
+    - 'test/**/*'
+    - 'spec/**/*'
 Metrics/ClassLength:
   Max: 300
   Exclude:
     - '**/*Test.rb'
     - '**/test_*.rb'
+    - '**/*_test.rb'
+    - '**/*_spec.rb'
+    - 'test/**/*'
+    - 'spec/**/*'
 Metrics/MethodLength:
   Max: 100
 Metrics/BlockLength:
