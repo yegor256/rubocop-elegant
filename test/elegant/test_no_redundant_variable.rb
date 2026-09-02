@@ -5,6 +5,7 @@
 
 require_relative '../../lib/rubocop-elegant'
 require_relative '../test__helper'
+require 'timeout'
 
 class NoRedundantVariableTest < Minitest::Test
   ALLOWED = {
@@ -38,7 +39,25 @@ class NoRedundantVariableTest < Minitest::Test
     'read_inside_and_rhs' => "def foo\n  x = compute\n  cond && bar(x)\nend",
     'read_inside_or_rhs' => "def foo\n  x = compute\n  cond || bar(x)\nend",
     'read_inside_rescue_body' => "def foo\n  x = compute\n  bar\nrescue\n  baz(x)\nend",
-    'read_inside_ensure' => "def foo\n  x = compute\n  bar\nensure\n  baz(x)\nend"
+    'read_inside_ensure' => "def foo\n  x = compute\n  bar\nensure\n  baz(x)\nend",
+    'call_between_assignment_and_read' => "def foo\n  line = receive\n  reader.close\n  bar(line)\nend",
+    'mutation_between_assignment_and_read' => "def foo\n  touched = ledger.uniq\n  ledger.clear\n  touched\nend",
+    'timed_call_between_assignment_and_read' => "def foo\n  started = monotonic\n  bar\n  monotonic - started\nend",
+    'yield_read_after_other_work' => "def foo\n  returned = yield\n  log(out)\n  returned\nend",
+    'calls_before_read_in_same_array' => "def foo\n  returned = yield\n  [out.string, err.string, returned]\nend",
+    'call_before_read_in_same_argument_list' => "def foo\n  x = bar\n  baz(qux, x)\nend",
+    'local_assignment_that_changes_saved_value' =>
+      "def foo\n  state = :old\n  saved = state\n  state = :new\n  saved\nend",
+    'constant_lookup_between_assignment_and_read' =>
+      "def foo\n  saved = $state\n  Trigger::Value\n  saved\nend",
+    'instance_variable_operand_before_read' => "def foo\n  x = bump\n  bar(@n, x)\nend",
+    'global_variable_operand_before_read' => "def foo\n  x = bump\n  bar($n, x)\nend",
+    'class_variable_operand_before_read' => "def foo\n  x = bump\n  bar(@@n, x)\nend",
+    'constant_operand_before_read' => "def foo\n  x = bump\n  bar(CONST, x)\nend",
+    'back_reference_operand_before_read' => "def foo\n  x = (s =~ /a/)\n  bar($~, x)\nend",
+    'instance_variable_inside_array_before_read' => "def foo\n  x = bump\n  bar([@n], x)\nend",
+    'chained_assignments_read_in_separate_statements' =>
+      "def foo\n  a = one\n  b = two\n  bar(a)\n  baz(b)\nend"
   }.freeze
   public_constant :ALLOWED
 
@@ -61,7 +80,29 @@ class NoRedundantVariableTest < Minitest::Test
     'read_in_and_lhs_position' =>
       ["def foo\n  x = bar\n  baz(x) && qux\nend", 1],
     'read_in_case_subject_position' =>
-      ["def foo\n  x = bar\n  case x\n  when 1\n    one\n  end\nend", 1]
+      ["def foo\n  x = bar\n  case x\n  when 1\n    one\n  end\nend", 1],
+    'pure_statement_between_assignment_and_read' =>
+      ["def foo\n  x = bar\n  1\n  baz(x)\nend", 1],
+    'rational_literal_between_assignment_and_read' =>
+      ["def foo\n  x = bar\n  1r\n  baz(x)\nend", 1],
+    'complex_literal_between_assignment_and_read' =>
+      ["def foo\n  x = bar\n  1i\n  baz(x)\nend", 1],
+    'inclusive_range_between_assignment_and_read' =>
+      ["def foo\n  x = bar\n  1..2\n  baz(x)\nend", 1],
+    'exclusive_range_between_assignment_and_read' =>
+      ["def foo\n  x = bar\n  1...2\n  baz(x)\nend", 1],
+    'pure_operands_before_read' =>
+      ["def foo\n  x = bar\n  baz(1, [2], x)\nend", 1],
+    'self_operand_before_read' =>
+      ["def foo\n  x = bar\n  baz(self, x)\nend", 1],
+    'local_operand_before_read' =>
+      ["def foo(y)\n  x = bar\n  baz(y, x)\nend", 1],
+    'read_inside_another_redundant_assignment' =>
+      ["def foo\n  a = one\n  b = [a]\n  bar(b)\nend", 2],
+    'call_after_read_in_same_argument_list' =>
+      ["def foo\n  x = bar\n  baz(x, qux)\nend", 1],
+    'chained_assignments_read_out_of_order' =>
+      ["def foo\n  a = one\n  b = two\n  bar(b, a)\nend", 1]
   }.freeze
   public_constant :VIOLATIONS
 
@@ -90,6 +131,22 @@ class NoRedundantVariableTest < Minitest::Test
       ["def self.foo\n  x = bar\n  baz(x)\nend", "def self.foo\n  baz(bar)\nend"],
     'shared_line_assignment_is_left_alone' =>
       ["def foo\n  x = bar; baz(x)\nend", "def foo\n  x = bar; baz(x)\nend"],
+    'call_between_assignment_and_read_is_left_alone' => [
+      "def foo\n  line = receive\n  reader.close\n  bar(line)\nend",
+      "def foo\n  line = receive\n  reader.close\n  bar(line)\nend"
+    ],
+    'calls_before_read_in_array_are_left_alone' => [
+      "def foo\n  returned = yield\n  [out.string, returned]\nend",
+      "def foo\n  returned = yield\n  [out.string, returned]\nend"
+    ],
+    'read_inside_another_redundant_assignment_inlines_the_inner_one' => [
+      "def foo\n  a = one\n  b = [a]\n  bar(b)\nend",
+      "def foo\n  b = [one]\n  bar(b)\nend"
+    ],
+    'instance_variable_operand_before_read_is_left_alone' => [
+      "def foo\n  x = bump\n  bar(@n, x)\nend",
+      "def foo\n  x = bump\n  bar(@n, x)\nend"
+    ],
     'hash_into_bare_send_arg_is_wrapped' =>
       ["def foo\n  x = { a: 1 }\n  baz x\nend", "def foo\n  baz ({ a: 1 })\nend"],
     'shorthand_pair_expands_to_long_form' =>
@@ -131,6 +188,14 @@ class NoRedundantVariableTest < Minitest::Test
   def test_inner_def_does_not_pollute_outer_scope
     total = offenses("def foo\n  x = 1\n  def bar\n    x = 2\n    baz(x)\n  end\n  qux(x)\n  zap(x)\nend").size
     assert_equal(1, total, "Expected only the inner def's redundant variable to be flagged, got #{total}")
+  end
+
+  def test_scales_to_a_long_chain_of_assignments
+    assignments = (1..20).map { |idx| "  a#{idx} = f#{idx}" }
+    arguments = (1..20).map { |idx| "a#{idx}" }.join(', ')
+    source = ['def foo', *assignments, "  sink(#{arguments})", 'end'].join("\n")
+    total = Timeout.timeout(2) { offenses(source).size }
+    assert_equal(20, total, "Expected all 20 assignments to be flagged, got #{total}")
   end
 
   private
