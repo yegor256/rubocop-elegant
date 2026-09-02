@@ -15,16 +15,19 @@ class ClassInModuleTest < Minitest::Test
     'module_without_any_class' => "module Foo\nend",
     'top_level_method_only' => "def foo\nend",
     'nested_class_inside_class_inside_module' => "module Foo\n  class Bar\n    class Baz\n    end\n  end\nend",
-    'class_with_inheritance_inside_module' => "module Foo\n  class Bar < StandardError\n  end\nend"
+    'class_with_inheritance_inside_module' => "module Foo\n  class Bar < StandardError\n  end\nend",
+    'class_nested_in_compact_namespaced_class' => "class Foo::Bar\n  class Baz < StandardError\n  end\nend"
   }.freeze
   public_constant :ALLOWED
 
   VIOLATIONS = {
     'plain_top_level_class' => ["class Foo\nend", 1],
     'top_level_class_with_explicit_root' => ["class ::Foo\nend", 1],
-    'top_level_class_with_nested_class' => ["class Foo\n  class Bar\n  end\nend", 2],
+    'top_level_class_with_nested_class' => ["class Foo\n  class Bar\n  end\nend", 1],
     'two_top_level_classes' => ["class Foo\nend\nclass Bar\nend", 2],
-    'top_level_class_with_inheritance' => ["class Foo < StandardError\nend", 1]
+    'top_level_class_with_inheritance' => ["class Foo < StandardError\nend", 1],
+    'root_scoped_class_inside_a_class' => ["class Foo::Bar\n  class ::Baz\n  end\nend", 1],
+    'root_scoped_class_inside_a_module' => ["module Foo\n  class ::Baz\n  end\nend", 1]
   }.freeze
   public_constant :VIOLATIONS
 

@@ -148,7 +148,13 @@ class NoRedundantVariableTest < Minitest::Test
       "def foo\n  x = bump\n  bar(@n, x)\nend"
     ],
     'hash_into_bare_send_arg_is_wrapped' =>
-      ["def foo\n  x = { a: 1 }\n  baz x\nend", "def foo\n  baz ({ a: 1 })\nend"]
+      ["def foo\n  x = { a: 1 }\n  baz x\nend", "def foo\n  baz ({ a: 1 })\nend"],
+    'shorthand_pair_expands_to_long_form' =>
+      ["def foo\n  ids = compute\n  bar(ids:)\nend", "def foo\n  bar(ids: compute)\nend"],
+    'shorthand_pair_in_hash_literal_expands' =>
+      ["def foo\n  ids = compute\n  bar({ ids: })\nend", "def foo\n  bar({ ids: compute })\nend"],
+    'long_form_pair_still_inlines_the_value_only' =>
+      ["def foo\n  ids = compute\n  bar(list: ids)\nend", "def foo\n  bar(list: compute)\nend"]
   }.freeze
   public_constant :AUTOCORRECTIONS
 

@@ -10,11 +10,14 @@
 # are forbidden because they hide the structure of the code.
 #
 # Auto-correct relocates the offending bracket onto its own line: an
-# opener that is not at end-of-line gets a newline and the opener-line
-# indent plus two spaces inserted right after it; a closer that is not
-# at start-of-line gets a newline and the opener-line indent inserted
-# right before it. Surrounding indentation may still need a follow-up
-# layout pass, but the brackets themselves end up paired.
+# opener that is not at end-of-line is followed by a newline and the
+# opener-line indent plus two spaces; a closer that is not at
+# start-of-line is preceded by a newline and the opener-line indent.
+# The whitespace already sitting next to the bracket is consumed by
+# the rewrite rather than left in place, so the moved code lands on
+# the intended column instead of drifting right by that much.
+# Surrounding indentation may still need a follow-up layout pass, but
+# the brackets themselves end up paired.
 #
 # See https://www.yegor256.com/2014/10/23/paired-brackets-notation.html
 class RuboCop::Cop::Elegant::PairedBrackets < RuboCop::Cop::Base
@@ -28,6 +31,9 @@ class RuboCop::Cop::Elegant::PairedBrackets < RuboCop::Cop::Base
 
   CLOSERS = %i[tRPAREN tRBRACK tRCURLY].freeze
   private_constant :CLOSERS
+
+  BLANKS = [' ', "\t"].freeze
+  private_constant :BLANKS
 
   def on_new_investigation
     super
@@ -53,8 +59,22 @@ class RuboCop::Cop::Elegant::PairedBrackets < RuboCop::Cop::Base
     opener, closer = duo
     return if opener.line == closer.line
     indent = leading(opener)
-    register(opener) { |corrector| corrector.insert_after(opener.pos, "\n#{indent}  ") } unless ends?(opener)
-    register(closer) { |corrector| corrector.insert_before(closer.pos, "\n#{indent}") } unless starts?(closer)
+    register(opener) { |corrector| corrector.replace(trailing(opener), "\n#{indent}  ") } unless ends?(opener)
+    register(closer) { |corrector| corrector.replace(preceding(closer), "\n#{indent}") } unless starts?(closer)
+  end
+
+  def trailing(tok)
+    text = processed_source.buffer.source
+    stop = tok.pos.end_pos
+    stop += 1 while BLANKS.include?(text[stop])
+    tok.pos.end.resize(stop - tok.pos.end_pos)
+  end
+
+  def preceding(tok)
+    text = processed_source.buffer.source
+    from = tok.pos.begin_pos
+    from -= 1 while from.positive? && BLANKS.include?(text[from - 1])
+    tok.pos.begin.adjust(begin_pos: from - tok.pos.begin_pos)
   end
 
   def starts?(tok)
