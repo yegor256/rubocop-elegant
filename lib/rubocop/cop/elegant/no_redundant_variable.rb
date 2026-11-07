@@ -17,8 +17,12 @@
 # and conditional branches (+if+, +case+, +case_match+, +and+, +or+,
 # +rescue+, +resbody+, +ensure+) so that inlining does not change
 # whether or when the right-hand side is evaluated. A variable that
-# is reassigned, read more than once, or never read is left alone
-# too.
+# is reassigned, read more than once, never read, or read only
+# before its assignment (a parameter or block argument that is
+# overwritten later) is left alone too, and so is every variable of
+# a method that calls +binding+ or +eval+ on any receiver, evaluates
+# a string with +instance_eval+, +class_eval+ or +module_eval+, or
+# names any of those with a symbol, since they reach locals by name.
 #
 # Inlining moves the right-hand side down to the read, so whatever
 # ran in between would run before it instead. The variable is
@@ -26,21 +30,37 @@
 # spans the statements between the assignment and the read, and also
 # the operands that precede the read inside its own statement.
 # Side-effect free means literals, reads of local variables, +self+,
-# arrays, hashes, pairs and parenthesized groups of those. Everything
+# arrays, hashes, pairs and parenthesized groups of those, as long
+# as building them dispatches no method on a value: a hash key must
+# be a literal, a range bound a numeric literal or +nil+, and nothing
+# may be interpolated into a string, symbol or regexp. Everything
 # else is assumed to be observable: method calls, +yield+, blocks,
 # and reads of instance, class and global variables, constants and
 # back-references, which the right-hand side may itself write.
+# A local read in the gap is only side-effect free while the
+# right-hand side cannot change that local: neither the right-hand
+# side itself, nor, unless it is side-effect free, any block of the
+# method it might call, may assign it, whether plainly, through a
+# compound or multiple assignment, a named regexp capture, or a
+# pattern. The variable is also left alone when its read sits inside
+# an assignment to a local that the right-hand side calls as a method
+# or assigns, since that local would then already exist where the
+# right-hand side lands: the call would turn into a read of it, and a
+# block's own variable of that name, or a block's implicit +it+, into
+# the outer one.
 # Another assignment that this cop inlines too is stepped over when
-# its own read comes later and its own gap is clean, since both
-# right-hand sides then keep their relative order.
+# its own read comes later, its own gap is clean, and its line is not
+# disabled by a directive comment, since both right-hand sides then
+# keep their relative order.
 #
 # Auto-correct inlines the redundant assignment: it replaces the
 # single +lvar+ read with the source of the assignment's right-hand
 # side, then removes the whole assignment line including its leading
 # indent and trailing newline. An assignment that shares its line
 # with other code, or whose own source contains the read of another
-# redundant variable, is reported but not corrected, since removing
-# its line would clobber the other rewrite; a later pass picks it up.
+# redundant variable that this pass may correct as well, is reported
+# but not corrected, since removing its line would clobber the other
+# rewrite; a later pass picks it up.
 # When the read is the value of a Ruby 3.1 shorthand pair, such as
 # the +ids+ of +call(ids:)+, key and value share one range, so the
 # whole pair is rewritten into its long form +ids: <rhs>+ instead.
@@ -79,6 +99,27 @@ class RuboCop::Cop::Elegant::NoRedundantVariable < RuboCop::Cop::Base
   ].freeze
   public_constant :PURE_TYPES
 
+  LITERAL_TYPES = %i[int float rational complex str sym true false nil].freeze
+  public_constant :LITERAL_TYPES
+
+  BOUND_TYPES = %i[int float rational nil].freeze
+  public_constant :BOUND_TYPES
+
+  INTERPOLATING_TYPES = %i[dstr dsym xstr regexp].freeze
+  public_constant :INTERPOLATING_TYPES
+
+  CLOSURE_TYPES = %i[block numblock itblock].freeze
+  public_constant :CLOSURE_TYPES
+
+  INTROSPECTIVE_METHODS = %i[binding eval].freeze
+  public_constant :INTROSPECTIVE_METHODS
+
+  EVALUATING_METHODS = %i[instance_eval class_eval module_eval].freeze
+  public_constant :EVALUATING_METHODS
+
+  NAMED_GROUP = /\(\?[<']([^>'=!]+)[>']/.freeze
+  public_constant :NAMED_GROUP
+
   def on_def(node)
     check(node.body)
   end
@@ -91,6 +132,7 @@ class RuboCop::Cop::Elegant::NoRedundantVariable < RuboCop::Cop::Base
 
   def check(body)
     return if body.nil?
+    return if introspective?(body)
     assigns = Hash.new { |h, k| h[k] = [] }
     reads = Hash.new { |h, k| h[k] = [] }
     tainted = []
@@ -99,20 +141,37 @@ class RuboCop::Cop::Elegant::NoRedundantVariable < RuboCop::Cop::Base
   end
 
   def singles(assigns, reads, tainted)
-    found = {}
+    found = {}.compare_by_identity
     assigns.each do |name, nodes|
       next if tainted.include?(name)
       next unless nodes.size == 1
       next unless reads[name].size == 1
+      next unless follows?(reads[name].first, nodes.first)
       next if hoisted?(reads[name].first, nodes.first)
       found[nodes.first] = reads[name].first
     end
     found
   end
 
+  def introspective?(body)
+    body.each_node(:send, :csend, :sym).any? do |node|
+      next (INTROSPECTIVE_METHODS + EVALUATING_METHODS).include?(node.value) if node.sym_type?
+      next true if INTROSPECTIVE_METHODS.include?(node.method_name)
+      EVALUATING_METHODS.include?(node.method_name) && node.arguments?
+    end
+  end
+
+  def follows?(read, assign)
+    return false if read.each_ancestor.any? { |node| node.equal?(assign) }
+    read.source_range.begin_pos >= assign.source_range.end_pos
+  end
+
   def inline(singles)
-    movable = singles.select { |assign, _| solo?(assign) && !swallows?(assign, singles) }
-    crossings = {}
+    candidates = singles.select { |assign, _| solo?(assign) && enabled_line?(assign.first_line) }.compare_by_identity
+    hopeful = {}.compare_by_identity
+    live = candidates.reject { |assign, read| crossed?(read, assign, candidates, hopeful) }
+    movable = candidates.reject { |assign, _| swallows?(assign, live) }.compare_by_identity
+    crossings = {}.compare_by_identity
     singles.each do |assign, read|
       next if crossed?(read, assign, movable, crossings)
       register(assign, read, movable.key?(assign))
@@ -236,38 +295,65 @@ class RuboCop::Cop::Elegant::NoRedundantVariable < RuboCop::Cop::Base
   end
 
   def scan?(read, assign, movable, crossings)
+    names = clobbers(assign)
+    mentions = mentioned(assign.children.last)
     child = read
-    parent = read.parent
-    until parent.nil?
+    loop do
+      parent = child.parent
+      return true if parent.lvasgn_type? && mentions.include?(parent.children.first)
       return true unless before(parent, child, assign).all? do |node|
-        deferred?(node, read, movable, crossings)
+        deferred?(node, read, names, movable, crossings)
       end
       return false if parent.equal?(assign.parent)
       child = parent
-      parent = parent.parent
     end
-    false
+  end
+
+  def mentioned(rhs)
+    names = written(rhs)
+    names << :it if rhs.each_node(:itblock).any?
+    rhs.each_node(:send) { |call| names << call.method_name if call.receiver.nil? }
+    names
   end
 
   def before(parent, child, assign)
     kids = parent.children
     stop = kids.index { |node| node.equal?(child) }
-    return [] if stop.nil?
-    return kids[0...stop] unless parent.equal?(assign.parent)
+    return kids[0...stop].grep(RuboCop::AST::Node) unless parent.equal?(assign.parent)
     kids[(kids.index { |node| node.equal?(assign) } + 1)...stop]
   end
 
-  def deferred?(node, read, movable, crossings)
-    return true if pure?(node)
+  def deferred?(node, read, names, movable, crossings)
+    return names.empty? || node.each_node(:lvar).none? { |lvar| names.include?(lvar.children.first) } if pure?(node)
     twin = movable[node]
     return false if twin.nil?
     return false if twin.source_range.begin_pos < read.source_range.begin_pos
     !crossed?(twin, node, movable, crossings)
   end
 
+  def clobbers(assign)
+    rhs = assign.children.last
+    return [] if pure?(rhs)
+    written(rhs) | closures(assign.each_ancestor(:def, :defs).first)
+  end
+
+  def closures(scope)
+    @closures ||= {}.compare_by_identity
+    @closures[scope] ||= scope.each_node(*CLOSURE_TYPES).flat_map { |block| written(block) }
+  end
+
+  def written(root)
+    root.each_node(:lvasgn, :match_var, :match_with_lvasgn).flat_map do |write|
+      next write.children.first unless write.match_with_lvasgn_type?
+      write.children.first.content.scan(NAMED_GROUP).map { |(group)| group.to_sym }
+    end
+  end
+
   def pure?(node)
-    return true unless node.is_a?(RuboCop::AST::Node)
     return false unless PURE_TYPES.include?(node.type)
+    return false if node.begin_type? && INTERPOLATING_TYPES.include?(node.parent.type)
+    return node.each_child_node.all? { |kid| BOUND_TYPES.include?(kid.type) } if node.range_type?
+    return LITERAL_TYPES.include?(node.key.type) && pure?(node.value) if node.pair_type?
     node.each_child_node.all? { |kid| pure?(kid) }
   end
 end
