@@ -57,7 +57,32 @@ class NoRedundantVariableTest < Minitest::Test
     'back_reference_operand_before_read' => "def foo\n  x = (s =~ /a/)\n  bar($~, x)\nend",
     'instance_variable_inside_array_before_read' => "def foo\n  x = bump\n  bar([@n], x)\nend",
     'chained_assignments_read_in_separate_statements' =>
-      "def foo\n  a = one\n  b = two\n  bar(a)\n  baz(b)\nend"
+      "def foo\n  a = one\n  b = two\n  bar(a)\n  baz(b)\nend",
+    'local_assigned_by_rhs_read_before_read' => "def foo(y)\n  x = (y = 2)\n  bar(y, x)\nend",
+    'local_assigned_by_rhs_read_in_gap' => "def foo(y)\n  x = (y = 2)\n  [y]\n  bar(x)\nend",
+    'local_compound_assigned_by_rhs_read_before_read' => "def foo(y)\n  x = (y += 1)\n  bar(y, x)\nend",
+    'local_multiple_assigned_by_rhs_read_before_read' => "def foo(y)\n  x = (y, z = 1, 2)\n  bar(y, x, z)\nend",
+    'local_assigned_in_rhs_block_read_before_read' => "def foo(y)\n  x = tap { y = 3 }\n  bar(y, x)\nend",
+    'local_captured_by_rhs_regexp_read_before_read' =>
+      "def foo(y)\n  x = (/(?<y>\\d)/ =~ s)\n  bar(y, x)\nend",
+    'local_captured_by_rhs_quoted_group_read_before_read' =>
+      "def foo(y)\n  x = (/(?'y'\\d)/e =~ s)\n  bar(y, x)\nend",
+    'local_bound_by_rhs_pattern_read_before_read' => "def foo(y)\n  x = (s in [y])\n  bar(y, x)\nend",
+    'local_assigned_by_closure_rhs_may_call' =>
+      "def foo(y)\n  inc = -> { y += 1 }\n  inc.call\n  x = inc.call\n  bar(y, x)\nend",
+    'method_calling_binding' => "def foo(y)\n  x = mutate(binding)\n  bar(y, x)\nend",
+    'method_calling_eval' => "def foo(y)\n  x = eval('y = 2')\n  bar(y, x)\nend",
+    'local_interpolated_before_read' => "def foo(y)\n  x = bar\n  baz(\"\#{y}\#{x}\")\nend",
+    'local_interpolated_into_regexp_between_assignment_and_read' =>
+      "def foo(y)\n  x = bar\n  /\#{y}/\n  baz(x)\nend",
+    'range_of_locals_between_assignment_and_read' => "def foo(a, b)\n  x = bar\n  [a..b]\n  baz(x)\nend",
+    'hash_keyed_by_local_between_assignment_and_read' =>
+      "def foo(y)\n  x = bar\n  [{ y => 1 }]\n  baz(x)\nend",
+    'read_before_reassignment_of_parameter' => "def foo(y)\n  x = bar(y)\n  y = 1\n  x\nend",
+    'read_before_reassignment_of_block_argument' => "def foo\n  [1].each do |y|\n    bar(y)\n    y = 2\n  end\nend",
+    'read_inside_assignment_to_local_named_like_rhs_call' => "def foo\n  old = name\n  name = old.upcase\nend",
+    'read_inside_assignment_to_local_assigned_in_rhs_block' =>
+      "def foo\n  x = bar(tap { d = 1 })\n  d = [x]\nend"
   }.freeze
   public_constant :ALLOWED
 
@@ -102,7 +127,25 @@ class NoRedundantVariableTest < Minitest::Test
     'call_after_read_in_same_argument_list' =>
       ["def foo\n  x = bar\n  baz(x, qux)\nend", 1],
     'chained_assignments_read_out_of_order' =>
-      ["def foo\n  a = one\n  b = two\n  bar(b, a)\nend", 1]
+      ["def foo\n  a = one\n  b = two\n  bar(b, a)\nend", 1],
+    'local_operand_before_read_when_rhs_assigns_another_local' =>
+      ["def foo(y)\n  x = (z = 2)\n  bar(y, x, z)\nend", 1],
+    'local_operand_before_read_when_rhs_captures_another_local' =>
+      ["def foo(y)\n  x = (/(?<z>\\d)(?<=a)/ =~ s)\n  bar(y, x, z)\nend", 1],
+    'local_operand_assigned_only_outside_closures' =>
+      ["def foo(y)\n  [1].each { |i| sum(i) }\n  x = compute\n  bar(y, x)\nend", 1],
+    'pure_rhs_crossing_local_assigned_in_closure' =>
+      ["def foo\n  total = 0\n  [1].each { |i| total += i }\n  label = 'Total'\n  report(total, label)\nend", 1],
+    'hash_keyed_by_local_around_read' =>
+      ["def foo(key)\n  val = compute\n  store({ key => val })\nend", 1],
+    'range_bounded_by_local_around_read' =>
+      ["def foo(low)\n  high = compute\n  bar(low..high)\nend", 1],
+    'literal_text_before_read_in_interpolation' =>
+      ["def foo\n  x = bar\n  baz(\"a\#{x}\")\nend", 1],
+    'read_inside_assignment_to_unrelated_local' =>
+      ["def foo\n  old = name\n  other = old.upcase\n  other\nend", 2],
+    'read_inside_reassignment_of_local_read_by_rhs' =>
+      ["def foo(path)\n  clean = path.strip\n  path = clean.downcase\n  path\nend", 1]
   }.freeze
   public_constant :VIOLATIONS
 
@@ -147,6 +190,22 @@ class NoRedundantVariableTest < Minitest::Test
       "def foo\n  x = bump\n  bar(@n, x)\nend",
       "def foo\n  x = bump\n  bar(@n, x)\nend"
     ],
+    'local_assigned_by_rhs_read_before_read_is_left_alone' => [
+      "def foo(y)\n  x = (y = 2)\n  bar(y, x)\nend",
+      "def foo(y)\n  x = (y = 2)\n  bar(y, x)\nend"
+    ],
+    'local_assigned_by_rhs_read_after_read_is_inlined' => [
+      "def foo(y)\n  x = (y = 2)\n  bar(x, y)\nend",
+      "def foo(y)\n  bar((y = 2), y)\nend"
+    ],
+    'read_inside_assignment_to_local_named_like_rhs_call_is_left_alone' => [
+      "def foo\n  old = name\n  name = old.upcase\nend",
+      "def foo\n  old = name\n  name = old.upcase\nend"
+    ],
+    'hash_keyed_by_local_around_read_is_inlined' => [
+      "def foo(key)\n  val = compute\n  store({ key => val })\nend",
+      "def foo(key)\n  store({ key => compute })\nend"
+    ],
     'hash_into_bare_send_arg_is_wrapped' =>
       ["def foo\n  x = { a: 1 }\n  baz x\nend", "def foo\n  baz ({ a: 1 })\nend"],
     'shorthand_pair_expands_to_long_form' =>
@@ -190,6 +249,21 @@ class NoRedundantVariableTest < Minitest::Test
     assert_equal(1, total, "Expected only the inner def's redundant variable to be flagged, got #{total}")
   end
 
+  def test_keeps_arguments_when_rhs_assigns_one
+    source = "def foo(y)\n  x = (y = 2)\n  bar(y, x)\nend"
+    fixed = autocorrect(source)
+    assert_equal(arguments(source), arguments(fixed), "Auto-correct changed what bar receives, got #{fixed.inspect}")
+  end
+
+  def test_keeps_order_when_twin_is_disabled
+    source = [
+      'def foo', '  a = one', '  # rubocop:disable Elegant/NoRedundantVariable', '  b = two',
+      '  # rubocop:enable Elegant/NoRedundantVariable', '  bar(a, b)', 'end'
+    ].join("\n")
+    fixed = autocorrect(source, directives: true)
+    assert_equal(source, fixed, "Expected the assignment before a disabled one to stay, got #{fixed.inspect}")
+  end
+
   def test_scales_to_a_long_chain_of_assignments
     assignments = (1..20).map { |idx| "  a#{idx} = f#{idx}" }
     arguments = (1..20).map { |idx| "a#{idx}" }.join(', ')
@@ -208,8 +282,18 @@ class NoRedundantVariableTest < Minitest::Test
     ).offenses
   end
 
-  def autocorrect(source)
+  def arguments(source)
+    host = Class.new { define_method(:bar) { |*args| args } }
+    host.class_eval(source, __FILE__, __LINE__)
+    host.new.foo(1)
+  end
+
+  def autocorrect(source, directives: false)
     processed = RuboCop::ProcessedSource.new(source, Float(RUBY_VERSION[/[0-9]+.[0-9]+/]))
+    if directives
+      processed.config = RuboCop::ConfigLoader.default_configuration
+      processed.registry = RuboCop::Cop::Registry.global
+    end
     found = RuboCop::Cop::Commissioner.new(
       [RuboCop::Cop::Elegant::NoRedundantVariable.new(RuboCop::Config.new)], [], raise_error: true
     ).investigate(processed).offenses
