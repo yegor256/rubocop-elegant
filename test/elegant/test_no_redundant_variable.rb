@@ -72,6 +72,11 @@ class NoRedundantVariableTest < Minitest::Test
       "def foo(y)\n  inc = -> { y += 1 }\n  inc.call\n  x = inc.call\n  bar(y, x)\nend",
     'method_calling_binding' => "def foo(y)\n  x = mutate(binding)\n  bar(y, x)\nend",
     'method_calling_eval' => "def foo(y)\n  x = eval('y = 2')\n  bar(y, x)\nend",
+    'method_calling_eval_on_kernel' => "def foo(y)\n  x = Kernel.eval('y = 2')\n  bar(y, x)\nend",
+    'method_evaluating_a_string_on_self' => "def foo(y)\n  x = instance_eval('y = 2')\n  bar(y, x)\nend",
+    'method_sending_eval' => "def foo(y)\n  x = send(:eval, 'y = 2')\n  bar(y, x)\nend",
+    'method_calling_binding_of_a_proc' =>
+      "def foo(y)\n  pr = proc {}\n  pr.call\n  x = pr.binding.local_variable_set(:y, 2)\n  bar(y, x)\nend",
     'local_interpolated_before_read' => "def foo(y)\n  x = bar\n  baz(\"\#{y}\#{x}\")\nend",
     'local_interpolated_into_regexp_between_assignment_and_read' =>
       "def foo(y)\n  x = bar\n  /\#{y}/\n  baz(x)\nend",
@@ -79,10 +84,14 @@ class NoRedundantVariableTest < Minitest::Test
     'hash_keyed_by_local_between_assignment_and_read' =>
       "def foo(y)\n  x = bar\n  [{ y => 1 }]\n  baz(x)\nend",
     'read_before_reassignment_of_parameter' => "def foo(y)\n  x = bar(y)\n  y = 1\n  x\nend",
+    'read_inside_own_heredoc' => "def foo(name)\n  name = <<~TXT\n    Hello \#{name}\n  TXT\nend",
+    'embedded_reassignment_identical_to_the_assignment' => "def foo\n  x = bar\n  qux(x = bar, x)\nend",
     'read_before_reassignment_of_block_argument' => "def foo\n  [1].each do |y|\n    bar(y)\n    y = 2\n  end\nend",
     'read_inside_assignment_to_local_named_like_rhs_call' => "def foo\n  old = name\n  name = old.upcase\nend",
     'read_inside_assignment_to_local_assigned_in_rhs_block' =>
-      "def foo\n  x = bar(tap { d = 1 })\n  d = [x]\nend"
+      "def foo\n  x = bar(tap { d = 1 })\n  d = [x]\nend",
+    'read_inside_assignment_to_it_when_rhs_block_uses_it' =>
+      "def foo\n  x = items.map { it * 2 }\n  it = [x]\nend"
   }.freeze
   public_constant :ALLOWED
 
@@ -144,6 +153,8 @@ class NoRedundantVariableTest < Minitest::Test
       ["def foo\n  x = bar\n  baz(\"a\#{x}\")\nend", 1],
     'read_inside_assignment_to_unrelated_local' =>
       ["def foo\n  old = name\n  other = old.upcase\n  other\nend", 2],
+    'method_evaluating_a_block_on_self' =>
+      ["def foo(y)\n  x = compute\n  bar(y, x)\n  instance_eval { baz }\nend", 1],
     'read_inside_reassignment_of_local_read_by_rhs' =>
       ["def foo(path)\n  clean = path.strip\n  path = clean.downcase\n  path\nend", 1]
   }.freeze
@@ -201,6 +212,14 @@ class NoRedundantVariableTest < Minitest::Test
     'read_inside_assignment_to_local_named_like_rhs_call_is_left_alone' => [
       "def foo\n  old = name\n  name = old.upcase\nend",
       "def foo\n  old = name\n  name = old.upcase\nend"
+    ],
+    'assignment_holding_the_read_of_a_crossed_variable_is_inlined' => [
+      "def foo\n  a = one\n  b = [qux, a]\n  bar(b)\nend",
+      "def foo\n  a = one\n  bar([qux, a])\nend"
+    ],
+    'assignment_holding_the_read_of_an_uncorrectable_variable_is_inlined' => [
+      "def foo\n  a = one # note\n  b = [a]\n  bar(b)\nend",
+      "def foo\n  a = one # note\n  bar([a])\nend"
     ],
     'hash_keyed_by_local_around_read_is_inlined' => [
       "def foo(key)\n  val = compute\n  store({ key => val })\nend",
