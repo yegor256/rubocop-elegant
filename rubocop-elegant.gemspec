@@ -23,5 +23,5 @@ Gem::Specification.new do |s|
   s.metadata['rubygems_mfa_required'] = 'true'
   s.metadata['default_lint_roller_plugin'] = 'RuboCop::Elegant::Plugin'
   s.add_dependency('lint_roller', '~> 1.1')
-  s.add_dependency('rubocop', '~> 1.75')
+  s.add_dependency('rubocop', '~> 1.92')
 end
