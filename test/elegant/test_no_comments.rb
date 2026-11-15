@@ -107,6 +107,42 @@ class NoCommentsTest < Minitest::Test
     )
   end
 
+  def test_allows_pdd_puzzle_continuations
+    source =
+      "# @todo #279:30min Implement command handling. As in other commands,\n" \
+      "#  there should be case/when command/end loop and commands should be\n" \
+      "#  implemented as methods.\nraise(NotImplementedError)"
+    assert_empty(offenses(source), 'PDD continuation lines should be allowed')
+    assert_equal(source, correct(source), 'PDD continuation lines were removed')
+  end
+
+  def test_allows_indented_pdd_puzzle_continuations
+    source = "def foo\n  # @ToDo #1 Implement this.\n  #  Keep the description.\n  raise(NotImplementedError)\nend"
+    assert_empty(offenses(source), 'Indented PDD continuation should be allowed')
+    assert_equal(source, correct(source), 'Indented PDD continuation was removed')
+  end
+
+  def test_disallows_orphan_pdd_continuation
+    assert_equal(1, offenses("#  No puzzle precedes this.\nx = 1").size, 'Orphan continuation should be flagged')
+  end
+
+  def test_disallows_pdd_continuation_after_gap
+    ['', 'x = 1', '# ordinary comment', '# frozen_string_literal: true'].each do |gap|
+      source = "# @todo #1 Implement this.\n#{gap}\n#  Detached continuation.\nx = 2"
+      assert_includes(
+        offenses(source).map { |offense| offense.location.line }, 3,
+        "Continuation after #{gap.inspect} should be flagged"
+      )
+    end
+  end
+
+  def test_disallows_single_space_pdd_continuation
+    assert_equal(
+      2, offenses("# @todo #1 Implement this.\n# Only one space.\n#  Detached continuation.\nx = 1").size,
+      'Single-space comment should end the puzzle'
+    )
+  end
+
   def test_corrects_preserves_pdd_puzzle
     assert_equal(
       "# @todo #1 do it\ndef foo; end",
