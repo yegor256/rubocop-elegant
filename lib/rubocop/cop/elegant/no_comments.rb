@@ -10,19 +10,22 @@ class RuboCop::Cop::Elegant::NoComments < RuboCop::Cop::Base
   public_constant :MSG
 
   def on_new_investigation
+    previous = nil
     processed_source.comments.each do |comment|
-      register(comment) unless allowed?(comment)
+      previous = puzzle?(comment, previous) ? comment.location.line : nil
+      register(comment) unless previous || allowed?(comment)
     end
   end
 
   private
 
   def allowed?(comment)
-    spdx?(comment) || magic?(comment) || rubocop?(comment) || puzzle?(comment) || (gemspec? && docblock?(comment))
+    spdx?(comment) || magic?(comment) || rubocop?(comment) || (gemspec? && docblock?(comment))
   end
 
-  def puzzle?(comment)
-    comment.text.match?(/@todo\b/i)
+  def puzzle?(comment, previous)
+    comment.text.match?(/@todo\b/i) ||
+      (previous == comment.location.line - 1 && comment.text.start_with?('#  '))
   end
 
   def spdx?(comment)
