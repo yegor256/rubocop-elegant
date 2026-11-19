@@ -16,7 +16,10 @@
 # that inlining does not move the right-hand side into a hot path,
 # and conditional branches (+if+, +case+, +case_match+, +and+, +or+,
 # +rescue+, +resbody+, +ensure+) so that inlining does not change
-# whether or when the right-hand side is evaluated. A variable that
+# whether or when the right-hand side is evaluated; the arguments of
+# safe navigation (+csend+) are guarded the same way, since Ruby skips
+# their evaluation when the receiver is nil, while the receiver of a
+# safe navigation is always evaluated and stays eligible. A variable that
 # is reassigned, read more than once, or never read is left alone
 # too.
 #
@@ -178,6 +181,7 @@ class RuboCop::Cop::Elegant::NoRedundantVariable < RuboCop::Cop::Base
       return true if LOOP_TYPES.include?(parent.type)
       return true if ALWAYS_HOIST_TYPES.include?(parent.type)
       return true if ALWAYS_FIRST_TYPES.include?(parent.type) && !parent.children.first.equal?(child)
+      return true if parent.csend_type? && !parent.children.first.equal?(child)
       child = parent
       parent = parent.parent
     end
