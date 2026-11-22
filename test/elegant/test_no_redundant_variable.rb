@@ -38,7 +38,11 @@ class NoRedundantVariableTest < Minitest::Test
     'read_inside_and_rhs' => "def foo\n  x = compute\n  cond && bar(x)\nend",
     'read_inside_or_rhs' => "def foo\n  x = compute\n  cond || bar(x)\nend",
     'read_inside_rescue_body' => "def foo\n  x = compute\n  bar\nrescue\n  baz(x)\nend",
-    'read_inside_ensure' => "def foo\n  x = compute\n  bar\nensure\n  baz(x)\nend"
+    'read_inside_ensure' => "def foo\n  x = compute\n  bar\nensure\n  baz(x)\nend",
+    'read_inside_csend_argument' =>
+      "def deliver(receiver)\n  x = record_event\n  receiver&.accept(x)\nend",
+    'read_nested_inside_csend_argument' =>
+      "def deliver(receiver)\n  x = compute\n  receiver&.accept(x.foo)\nend"
   }.freeze
   public_constant :ALLOWED
 
@@ -61,7 +65,9 @@ class NoRedundantVariableTest < Minitest::Test
     'read_in_and_lhs_position' =>
       ["def foo\n  x = bar\n  baz(x) && qux\nend", 1],
     'read_in_case_subject_position' =>
-      ["def foo\n  x = bar\n  case x\n  when 1\n    one\n  end\nend", 1]
+      ["def foo\n  x = bar\n  case x\n  when 1\n    one\n  end\nend", 1],
+    'read_in_csend_receiver_position' =>
+      ["def foo\n  x = build\n  x&.bar\nend", 1]
   }.freeze
   public_constant :VIOLATIONS
 
@@ -97,7 +103,13 @@ class NoRedundantVariableTest < Minitest::Test
     'shorthand_pair_in_hash_literal_expands' =>
       ["def foo\n  ids = compute\n  bar({ ids: })\nend", "def foo\n  bar({ ids: compute })\nend"],
     'long_form_pair_still_inlines_the_value_only' =>
-      ["def foo\n  ids = compute\n  bar(list: ids)\nend", "def foo\n  bar(list: compute)\nend"]
+      ["def foo\n  ids = compute\n  bar(list: ids)\nend", "def foo\n  bar(list: compute)\nend"],
+    'csend_argument_assignment_stays_unchanged' => [
+      "def deliver(receiver)\n  x = record_event\n  receiver&.accept(x)\nend",
+      "def deliver(receiver)\n  x = record_event\n  receiver&.accept(x)\nend"
+    ],
+    'csend_receiver_inlines' =>
+      ["def foo\n  x = build\n  x&.bar\nend", "def foo\n  build&.bar\nend"]
   }.freeze
   public_constant :AUTOCORRECTIONS
 
